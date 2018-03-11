@@ -1,0 +1,6 @@
+package stratego;
+
+public enum PieceType {
+    FLAG, BOMB, SPY, SCOUT, MINER, SERGEANT, LIEUTENANT, CAPTAIN, MAJOR,
+    COLONEL, GENERAL, MARSHALL, WATER
+}
