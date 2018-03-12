@@ -5,11 +5,11 @@ import static stratego.PieceType.*;
 
 import java.util.HashSet;
 
-public class Flag extends Piece{
+public class Flag extends Piece {
     // list attributes unique to Flag
-
-    public Flag(int range, PieceType pt, String pLabel) {
+    public Flag() {
         super(0, FLAG, "Flag");
+        setKills();
     }
 
     void setKills() {

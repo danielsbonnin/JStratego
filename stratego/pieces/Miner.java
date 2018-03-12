@@ -12,7 +12,8 @@ public class Miner extends Piece{
     }
 
     void setKills() {
-        PieceType[] myKills = { FLAG, BOMB, SPY, SCOUT, MINER };
+
+        PieceType[] myKills = {FLAG, BOMB, SPY, SCOUT, MINER};
         this.kills = new HashSet<PieceType>();
         for (PieceType p : myKills)
             this.kills.add(p);

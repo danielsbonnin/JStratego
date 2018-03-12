@@ -1,8 +1,6 @@
 package stratego;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static stratego.PieceType.*;
 
@@ -27,7 +25,31 @@ public class Constants {
             GENERAL,
             MARSHALL
     };
+    public static final Map<SquareState, String> SQUARE_STYLES;
+    static {
+        Map<SquareState, String> sqStyles = new EnumMap<>(SquareState.class);
 
+        sqStyles.put(SquareState.WATER,
+                "-fx-background-color: black, lightblue; -fx-background-insets: 0, 0 1 1 0;");
+        sqStyles.put(SquareState.EMPTY_LAND,
+                "-fx-background-color: black, lightgreen; -fx-background-insets: 0, 0 1 1 0;");
+        sqStyles.put(SquareState.SELECTED_ORIGIN,
+                "-fx-background-color: black, grey; -fx-background-insets: 0, 0 1 1 0;");
+        sqStyles.put(SquareState.OCCUPIED_P1,
+                "-fx-background-color: black, grey; -fx-background-insets: 0, 0 1 1 0;");
+        sqStyles.put(SquareState.OCCUPIED_P2,
+                "-fx-background-color: black, grey; -fx-background-insets: 0, 0 1 1 0;");
+        sqStyles.put(SquareState.POSSIBLE_MOVE,
+                "-fx-background-color: black, grey; -fx-background-insets: 0, 0 1 1 0;");
+
+        if (!sqStyles.keySet().equals(EnumSet.allOf(SquareState.class))) {
+            throw new RuntimeException(
+                    "SQUARE_STYLES is missing entries for 1 or more SquareState constants."
+            );
+        }
+
+        SQUARE_STYLES = Collections.unmodifiableMap(sqStyles);
+    }
     public static final List<PieceType> DEFAULT_PIECES = Collections.unmodifiableList(
             new ArrayList<PieceType>() {
                 {
