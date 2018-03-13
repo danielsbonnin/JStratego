@@ -12,6 +12,7 @@ import static stratego.SquareState.*;
 
 public class Square extends Pane {
     private Piece piece = null;
+    private boolean isEmpty = true;
     private boolean isSelected;
     private SquareState state = WATER;
     private SquareState last = EMPTY_LAND;
@@ -27,17 +28,19 @@ public class Square extends Pane {
         this.labelText.setLayoutY(12);
     }
     SquareState getLast() { return this.last; }
-    boolean isEmpty() { return (this.piece == null); }
+    boolean isEmpty() { return this.isEmpty; }
 
     void setPiece(Piece p) {
         this.piece = p;
         p.reveal();
+        this.isEmpty = false;
         this.labelText.setText(p.getLabelText());
     }
 
     Piece remove() {
         Piece p = this.piece;
         this.piece = null;
+        this.isEmpty = true;
         //TODO make constant
         this.labelText.setText("");
         return p;
@@ -61,5 +64,7 @@ public class Square extends Pane {
     }
 
     public SquareState getState() { return this.state; }
-    Piece getPiece() { return this.piece; }
+    Piece getPiece() {
+        return this.piece;
+    }
 }

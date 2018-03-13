@@ -3,6 +3,7 @@ package stratego;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import stratego.pieces.Piece;
@@ -13,8 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static stratego.Constants.*;
-import static stratego.GameState.SETUP_NOT_PIECE_SELECTED;
-import static stratego.GameState.SETUP_PIECE_SELECTED;
+import static stratego.GameState.*;
 import static stratego.SquareState.*;
 
 public class Game {
@@ -31,15 +31,20 @@ public class Game {
     private Square currentlySelected;
     private boolean originSelected;
     private GameState state;
+    private BoardCoords selected;
+    private List<Square> curPossMoves;
 
     public Game(GridPane gp, List<Button> pieceButtons, Scene scene) {
-        this.board = new Board(DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT);
+        this.board = new Board(DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT, true);
         this.boardPane = gp;
         this.pieceButtons = new ArrayList<Button>(pieceButtons);
         this.originSelected = false;
         this.p1 = new Player(DEFAULT_PIECES);
+        this.p2 = new Player(DEFAULT_PIECES);
         this.state = GameState.SETUP_NOT_PIECE_SELECTED;
         this.scene = scene;
+        this.selected = new BoardCoords(0, 0);
+        this.curPossMoves = new ArrayList<Square>();
 
         setupGridPane();
         setupPieceButtons();
@@ -73,16 +78,21 @@ public class Game {
 
         // GUI button to indicate finished setup
         Button finishedButton = (Button) this.scene.lookup("#btn_setup_finished");
+
+        // finished button click handler
         finishedButton.setOnMouseClicked( e-> {
             ButtonBar pieceButtonBar = (ButtonBar) this.scene.lookup("#pieceButtonBar");
             VBox finishedButtonVBox = (VBox) this.scene.lookup("#btn_finished_vbox");
 
             VBox vbox = (VBox) this.scene.lookup("#vbox");
             vbox.getChildren().removeAll(pieceButtonBar, finishedButtonVBox);
+
+            // Start game loop
             gameLoop();
         });
+
         // restrict board squares valid for placement
-        int placementRowStIdx = this.board.height - ((this.board.height / 2) - 1) - 1;
+        int placementRowStIdx = this.board.height - ((this.board.height / 2) - 1);
 
         // initialize piece buttons
         for (Button b : this.pieceButtons) {
@@ -121,14 +131,16 @@ public class Game {
                 sq.setOnMouseClicked(e -> {
                     // No piece selected; ignore
                     if (this.state == SETUP_NOT_PIECE_SELECTED) {
-                        if (!sq.isEmpty()) {
+                        if (!sq.isEmpty() && !(sq.getState() == WATER)) {
                             this.pieceInHand = sq.remove();
                             setState(SETUP_PIECE_SELECTED);
                             this.scene.getRoot().setCursor(Cursor.CROSSHAIR);
                         }
                         return;
                     }
-                    else if (!sq.isEmpty()) {   // square already contains a piece
+                    else if (sq.getState() == WATER) {
+                        return;
+                    } else if (!sq.isEmpty()) {   // square already contains a piece
                         this.p1.inventory.replace(sq.getPiece().getPt());
                         sq.remove();
                         // Reset button in case replaced piece was last of its type
@@ -143,14 +155,51 @@ public class Game {
         }
     }
 
+    public void showPossMoves() {
+        for (Square p : this.curPossMoves) {
+            p.setState(POSSIBLE_MOVE);
+        }
+    }
+
+    /**
+     * Game play
+     */
     public void gameLoop() {
         System.out.println("Entering Game Loop");
+        this.setState(MOVE_NOT_ORIGIN_SELECTED);
+
+        // remove square click handlers
+        for (int i = 0; i < this.board.height; i++) {
+            for (int j = 0; j < this.board.width; j++) {
+               Square sq = this.board.getSquare(i, j);
+                sq.setOnMouseClicked(null);
+            }
+        }
+        boardPane.setOnMousePressed(e->{
+            int row = ((int) (e.getY())) / 50;
+            int col = ((int) (e.getX())) / 50;
+            if (this.state == MOVE_NOT_ORIGIN_SELECTED) {
+                this.curPossMoves.addAll(this.board.getMoves(row, col));
+                if (this.curPossMoves.isEmpty())
+                    return;
+                showPossMoves();
+                setState(MOVE_ORIGIN_SELECTED);
+                this.selected = new BoardCoords(row, col);
+            } else if (this.state == MOVE_ORIGIN_SELECTED) {
+                if (this.board.move(selected.r, selected.c, row, col)) {
+                    System.out.println("Move chosen: (" + selected.c + ", " + selected.r + ") to " +
+                                        "(" + col + ", " + row + ")");
+                    setState(MOVE_NOT_ORIGIN_SELECTED);
+                    while (!this.curPossMoves.isEmpty())
+                        this.curPossMoves.remove(0).resetState();
+                }
+            }
+        });
     }
     public void setupGridPane() {
         for (int i = 0; i < this.board.height; i++)
             for (int j = 0; j < this.board.width; j++) {
                 Square sqTarget = this.board.getSquare(i, j);
-
                 boardPane.add(sqTarget, j, i);
             }
     }

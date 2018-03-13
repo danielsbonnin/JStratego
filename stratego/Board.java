@@ -8,6 +8,7 @@ import java.util.List;
 
 import static stratego.Constants.DEFAULT_BOARD_HEIGHT;
 import static stratego.Constants.DEFAULT_BOARD_WIDTH;
+import static stratego.Constants.DEFAULT_WATER_SQUARES;
 import static stratego.SquareState.*;
 
 public class Board {
@@ -15,7 +16,7 @@ public class Board {
     int width;
     int height;
 
-    public Board(int width, int height) {
+    public Board(int width, int height, boolean defaultWaterSquares) {
         this.width = width;
         this.height = height;
         this.board = new ArrayList< List<Square> >();
@@ -26,13 +27,18 @@ public class Board {
             }
             this.board.add(cur);
         }
+
+        // Set default water squares
+        if (defaultWaterSquares) {
+            for (BoardCoords bc : DEFAULT_WATER_SQUARES)
+                getSquare(bc.r, bc.c).setState(WATER);
+        }
     }
 
     public Square getSquare(int r, int c) {
         return this.board.get(r).get(c);
     }
     // Methods for updating GUI
-
 
     // Methods for moving and attacking
 
@@ -44,15 +50,15 @@ public class Board {
     }
 
     public boolean move(int startRow, int startCol, int endRow, int endCol) {
-        Square st = board.get(startRow).get(startCol);
+        Square st = getSquare(startRow, startCol);
         Piece stPiece = st.getPiece();
-        Square end = board.get(endRow).get(endCol);
+        Square end = getSquare(endRow, endCol);
         List<Square> moves = getMoves(startRow, startCol);
         if (!moves.contains(end)) return false;
         st.remove();
         if (!end.isEmpty()) {
             PieceType eType = end.getPiece().getPt();
-            if (!st.getPiece().getKills().contains(eType)) return true;
+            if (!stPiece.getKills().contains(eType)) return true;
             end.remove();
         }
         end.setPiece(stPiece);

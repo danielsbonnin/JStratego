@@ -44,7 +44,7 @@ public class Constants {
         sqStyles.put(SquareState.OCCUPIED_P2,
                 "-fx-background-color: black, grey; -fx-background-insets: 0, 0 1 1 0;");
         sqStyles.put(SquareState.POSSIBLE_MOVE,
-                "-fx-background-color: black, grey; -fx-background-insets: 0, 0 1 1 0;");
+                "-fx-background-color: black, orange; -fx-background-insets: 0, 0 1 1 0;");
 
         if (!sqStyles.keySet().equals(EnumSet.allOf(SquareState.class))) {
             throw new RuntimeException(
@@ -100,5 +100,25 @@ public class Constants {
         PIECETYPESTRING_TO_PIECETYPE = Collections.unmodifiableMap(pieceStrings);
     }
 
+    private static BoardCoords [] defaultWaterSquares = {
+            new BoardCoords(4, 2),
+            new BoardCoords(4, 3),
+            new BoardCoords(4, 6),
+            new BoardCoords(4, 7),
+            new BoardCoords(5, 2),
+            new BoardCoords(5, 3),
+            new BoardCoords(5, 6),
+            new BoardCoords(5, 7)
+
+    };
+
+    public static final List <BoardCoords> DEFAULT_WATER_SQUARES = Collections.unmodifiableList(
+            new ArrayList<BoardCoords>() {
+                {
+                    for (int i = 0; i < 8; i++)
+                        add(defaultWaterSquares[i]);
+                }
+            }
+    );
 
 }
