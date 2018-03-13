@@ -15,9 +15,9 @@ public class Board {
     int width;
     int height;
 
-    public Board() {
-        this.width = DEFAULT_BOARD_WIDTH;
-        this.height = DEFAULT_BOARD_HEIGHT;
+    public Board(int width, int height) {
+        this.width = width;
+        this.height = height;
         this.board = new ArrayList< List<Square> >();
         for (int i = 0; i < this.height; i++) {
             ArrayList<Square> cur = new ArrayList<Square>();

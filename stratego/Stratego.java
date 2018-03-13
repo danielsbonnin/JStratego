@@ -3,6 +3,7 @@ package stratego;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
+import javafx.scene.Cursor;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -12,6 +13,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +32,7 @@ public class Stratego extends Application {
         primaryStage.setMaxWidth(550);
         Scene scene = new Scene(root, 550, 650);
         GridPane gb = (GridPane) scene.lookup("#gameBoard");
-
+        scene.getRoot().setCursor(Cursor.CLOSED_HAND);
         primaryStage.setScene(scene);
         primaryStage.show();
 
@@ -48,6 +50,7 @@ public class Stratego extends Application {
         pieceButtons.add((Button)scene.lookup("#COLONEL"));
         pieceButtons.add((Button)scene.lookup("#GENERAL"));
         pieceButtons.add((Button)scene.lookup("#MARSHALL"));
-        Game game = new Game(gb, pieceButtons);
+        Game game = new Game(gb, pieceButtons, scene);
+        game.piecePlacementLoop();
     }
 }

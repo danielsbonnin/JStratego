@@ -19,7 +19,7 @@ public class Square extends Pane {
 
     public Square(SquareState state) {
         this.setState(state);
-        this.labelText = new Label("test");
+        this.labelText = new Label("");
         this.getChildren().add(this.labelText);
 
         // TODO: use constant cell size to center labelText
@@ -35,10 +35,12 @@ public class Square extends Pane {
         this.labelText.setText(p.getLabelText());
     }
 
-    void remove() {
+    Piece remove() {
+        Piece p = this.piece;
         this.piece = null;
         //TODO make constant
-        this.labelText.setText("Empty");
+        this.labelText.setText("");
+        return p;
     }
 
     void setSqstyle(String sqStyle) {
