@@ -15,27 +15,24 @@ public class Board {
     int width;
     int height;
 
-    public Board(GridPane gp) {
+    public Board() {
         this.width = DEFAULT_BOARD_WIDTH;
         this.height = DEFAULT_BOARD_HEIGHT;
         this.board = new ArrayList< List<Square> >();
         for (int i = 0; i < this.height; i++) {
-            ArrayList<Square> cur = new ArrayList();
+            ArrayList<Square> cur = new ArrayList<Square>();
             for (int j = 0; j < this.width; j++) {
                 cur.add(new Square(EMPTY_LAND));
             }
             this.board.add(cur);
         }
-        updateGridPane(gp);
     }
 
+    public Square getSquare(int r, int c) {
+        return this.board.get(r).get(c);
+    }
     // Methods for updating GUI
 
-    public void updateGridPane(GridPane gp) {
-        for (int i = 0; i < this.height; i++)
-            for (int j = 0; j < this.width; j++)
-                gp.add(this.board.get(i).get(j), i, j);
-    }
 
     // Methods for moving and attacking
 
@@ -100,13 +97,13 @@ public class Board {
 
     // methods for setting state
 
-    public Square selectSquare(int c, int r) {
+    public Square selectSquare(int r, int c) {
         Square selected = this.board.get(r).get(c);
         selected.setState(SELECTED_ORIGIN);
         return selected;
     }
 
-    public void unselectSquare(int c, int r) {
+    public void unselectSquare(int r, int c) {
         Square selected = this.board.get(r).get(c);
         selected.setState(selected.getLast());
     }

@@ -1,5 +1,7 @@
 package stratego;
 
+import stratego.pieces.*;
+
 import java.util.*;
 
 import static stratego.PieceType.*;
@@ -11,6 +13,7 @@ public class Constants {
     public static final int DEFAULT_BOARD_WIDTH = 10;
     public static final int DEFAULT_BOARD_HEIGHT = 10;
     public static final int DEFAULT_PIECES_COUNT = 40;
+    public static final String PIECE_LABEL_STYLE = "";
     private static PieceType default_pieces [] = {
             FLAG,
             BOMB, BOMB, BOMB, BOMB, BOMB, BOMB,
@@ -25,6 +28,7 @@ public class Constants {
             GENERAL,
             MARSHALL
     };
+
     public static final Map<SquareState, String> SQUARE_STYLES;
     static {
         Map<SquareState, String> sqStyles = new EnumMap<>(SquareState.class);
@@ -47,9 +51,9 @@ public class Constants {
                     "SQUARE_STYLES is missing entries for 1 or more SquareState constants."
             );
         }
-
         SQUARE_STYLES = Collections.unmodifiableMap(sqStyles);
     }
+
     public static final List<PieceType> DEFAULT_PIECES = Collections.unmodifiableList(
             new ArrayList<PieceType>() {
                 {
@@ -59,4 +63,42 @@ public class Constants {
                 }
             }
     );
+
+    public static final Map<PieceType, Piece> PIECETYPE_TO_PIECECLASS;
+    static {
+        Map<PieceType, Piece> pieceClasses = new EnumMap<>(PieceType.class);
+        pieceClasses.put(FLAG, new Flag());
+        pieceClasses.put(BOMB, new Bomb());
+        pieceClasses.put(SPY, new Spy());
+        pieceClasses.put(SCOUT, new Scout());
+        pieceClasses.put(MINER, new Miner());
+        pieceClasses.put(SERGEANT, new Sergeant());
+        pieceClasses.put(LIEUTENANT, new Lieutenant());
+        pieceClasses.put(CAPTAIN, new Captain());
+        pieceClasses.put(MAJOR, new Major());
+        pieceClasses.put(COLONEL, new Colonel());
+        pieceClasses.put(GENERAL, new General());
+        pieceClasses.put(MARSHALL, new Marshall());
+        PIECETYPE_TO_PIECECLASS = Collections.unmodifiableMap(pieceClasses);
+    }
+
+    public static final Map<String, PieceType> PIECETYPESTRING_TO_PIECETYPE;
+    static {
+        Map<String, PieceType> pieceStrings = new HashMap<String, PieceType>();
+        pieceStrings.put("FLAG", FLAG);
+        pieceStrings.put("BOMB", BOMB);
+        pieceStrings.put("SPY", SPY);
+        pieceStrings.put("SCOUT", SCOUT);
+        pieceStrings.put("MINER", MINER);
+        pieceStrings.put("SERGEANT", SERGEANT);
+        pieceStrings.put("LIEUTENANT", LIEUTENANT);
+        pieceStrings.put("CAPTAIN", CAPTAIN);
+        pieceStrings.put("MAJOR", MAJOR);
+        pieceStrings.put("COLONEL", COLONEL);
+        pieceStrings.put("GENERAL", GENERAL);
+        pieceStrings.put("MARSHALL", MARSHALL);
+        PIECETYPESTRING_TO_PIECETYPE = Collections.unmodifiableMap(pieceStrings);
+    }
+
+
 }
