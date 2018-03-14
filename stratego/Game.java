@@ -3,13 +3,11 @@ package stratego;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import stratego.pieces.Piece;
 import javafx.scene.Cursor;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,45 +15,106 @@ import static stratego.Constants.*;
 import static stratego.GameState.*;
 import static stratego.SquareState.*;
 
+/**
+ * A Game of Stratego
+ *
+ * <p>Contains the board, players, pieces.</p>
+ * <p>Coordinates the Setup, GamePlay phases of a game.</p>
+ *
+ * @author Daniel Bonnin
+ */
 public class Game {
+    /**
+     * A 2d Array of Square objects
+     * @see stratego.Square Square
+     * */
     private Board board;
+
+    /** @see javafx.scene.layout.GridPane the UI element*/
     private GridPane boardPane;
+
+    /** @see javafx.scene */
     private Scene scene;
+
+    /**
+     * button for each piece type for setting up board
+     * @see javafx.scene.control.Button
+     **/
     private List<Button> pieceButtons;
+
+    /**
+     * @see stratego.Player
+     */
     private Player p1;
     private Player p2;
-    private boolean finished = false;
-    private boolean started = false;
-    private Player currentTurn;
+
+    /**
+     * piece currently "held" by player while setting up board
+     * @see stratego.pieces.Piece
+     */
     private Piece pieceInHand;
-    private Square currentlySelected;
-    private boolean originSelected;
+
+    /**
+     * @see GameState
+     */
     private GameState state;
+
+    /**
+     * @see BoardCoords
+     */
     private BoardCoords selected;
+
+    /**
+     * Represents all possible moves from the selected board square
+     * @see Board#getMoves(int, int)
+     */
     private List<Square> curPossMoves;
 
+    /**
+     * Constructor produces a Game containing a board of default size
+     * and Players with default pieces
+     *
+     * @param gp           UI element representing the game board
+     * @param pieceButtons Button for each piece type
+     * @param scene        the javafx.scene.Scene used for this game's UI
+     * @see javafx.scene.Scene
+     */
     public Game(GridPane gp, List<Button> pieceButtons, Scene scene) {
         this.board = new Board(DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT, true);
         this.boardPane = gp;
         this.pieceButtons = new ArrayList<Button>(pieceButtons);
-        this.originSelected = false;
         this.p1 = new Player(DEFAULT_PIECES);
         this.p2 = new Player(DEFAULT_PIECES);
         this.state = GameState.SETUP_NOT_PIECE_SELECTED;
         this.scene = scene;
         this.selected = new BoardCoords(0, 0);
+
         this.curPossMoves = new ArrayList<Square>();
 
+        // initialize boardPane with Square objects from this.board
         setupGridPane();
-        setupPieceButtons();
+
+        // initialize piece buttons according to player's inventory
+        updatePieceButtons();
+
+        // player sets pieces on the board
+        piecePlacementLoop();
+
+        // game play
+        //gameLoop();
     }
 
+    /**
+     * Set style of piece buttons according to quantity in p1's inventory
+     * @see Player#inventory
+     */
     private void updatePieceButtons() {
+        // loop pieceButtons
         for (Button b : this.pieceButtons) {
-            // Type of piece represented by this button
+            // PieceType represented by this button
             PieceType pt = PIECETYPESTRING_TO_PIECETYPE.get(b.getId());
 
-            // Count of this button's piece type in inventory
+            // Count of this button's PieceType in inventory
             int count = this.p1.inventory.getCount(pt);
 
             if (count > 0) {        // at least 1 piece of this type
@@ -81,6 +140,7 @@ public class Game {
 
         // finished button click handler
         finishedButton.setOnMouseClicked( e-> {
+            System.out.println("finishedButton clicked");
             ButtonBar pieceButtonBar = (ButtonBar) this.scene.lookup("#pieceButtonBar");
             VBox finishedButtonVBox = (VBox) this.scene.lookup("#btn_finished_vbox");
 
@@ -127,10 +187,11 @@ public class Game {
             for (int j = 0; j < this.board.width; j++) {
                 Square sq = this.board.getSquare(i, j);
 
-                // click handler
+                // click handler for grid squares
                 sq.setOnMouseClicked(e -> {
-                    // No piece selected; ignore
+                    // no piece selected
                     if (this.state == SETUP_NOT_PIECE_SELECTED) {
+                        // if piece here, pick it up
                         if (!sq.isEmpty() && !(sq.getState() == WATER)) {
                             this.pieceInHand = sq.remove();
                             setState(SETUP_PIECE_SELECTED);
@@ -138,23 +199,28 @@ public class Game {
                         }
                         return;
                     }
-                    else if (sq.getState() == WATER) {
-                        return;
-                    } else if (!sq.isEmpty()) {   // square already contains a piece
+                    // piece is currently selected
+                    else if (sq.getState() == WATER) {  // WATER square clicked
+                        return;                         // do nothing
+                    } else if (!sq.isEmpty()) {  // square already contains a piece
+                        // put back piece in hand. pick up piece on board
                         this.p1.inventory.replace(sq.getPiece().getPt());
                         sq.remove();
                         // Reset button in case replaced piece was last of its type
                         updatePieceButtons();
                     } else {}
                     sq.setPiece(this.pieceInHand);
+                    sq.setState(OCCUPIED_P1);
 
-                    setState(SETUP_NOT_PIECE_SELECTED);
                     this.scene.getRoot().setCursor(Cursor.HAND);
                 });
             }
         }
     }
 
+    /**
+     * Display possible moves of Piece at currently selected Square
+     */
     public void showPossMoves() {
         for (Square p : this.curPossMoves) {
             p.setState(POSSIBLE_MOVE);
@@ -165,7 +231,6 @@ public class Game {
      * Game play
      */
     public void gameLoop() {
-        System.out.println("Entering Game Loop");
         this.setState(MOVE_NOT_ORIGIN_SELECTED);
 
         // remove square click handlers
@@ -175,27 +240,47 @@ public class Game {
                 sq.setOnMouseClicked(null);
             }
         }
-        boardPane.setOnMousePressed(e->{
+
+        // Set click handler for boardPane
+        // *Square instances do not know their board coordinates
+        //  so we calculate the grid relative to board bounds
+        this.boardPane.setOnMousePressed(e->{
+            // calculate board coordinates
             int row = ((int) (e.getY())) / 50;
             int col = ((int) (e.getX())) / 50;
+            BoardCoords bc = new BoardCoords(row, col);
             if (this.state == MOVE_NOT_ORIGIN_SELECTED) {
-                this.curPossMoves.addAll(this.board.getMoves(row, col));
-                if (this.curPossMoves.isEmpty())
+                /** Get moves for piece at this Square
+                 * @see Board#getMoves(int, int)
+                 */
+
+                this.curPossMoves.addAll(this.board.getMoves(bc.r, bc.c));
+                if (this.curPossMoves.isEmpty())  // no piece or non-moving piece
                     return;
+
+                // update UI to reflect curPossMoves
                 showPossMoves();
                 setState(MOVE_ORIGIN_SELECTED);
                 this.selected = new BoardCoords(row, col);
             } else if (this.state == MOVE_ORIGIN_SELECTED) {
+
+                // legal move
                 if (this.board.move(selected.r, selected.c, row, col)) {
-                    System.out.println("Move chosen: (" + selected.c + ", " + selected.r + ") to " +
-                                        "(" + col + ", " + row + ")");
                     setState(MOVE_NOT_ORIGIN_SELECTED);
+
+                    // reset UI Squares affected by showPossMoves
                     while (!this.curPossMoves.isEmpty())
                         this.curPossMoves.remove(0).resetState();
+                    this.board.getSquare(selected.r,selected.c).setState(EMPTY_LAND);
+                    this.board.getSquare(row, col).setState(OCCUPIED_P1);
                 }
             }
         });
     }
+
+    /**
+     * Sets grid pane.
+     */
     public void setupGridPane() {
         for (int i = 0; i < this.board.height; i++)
             for (int j = 0; j < this.board.width; j++) {
@@ -204,8 +289,17 @@ public class Game {
             }
     }
 
-    private void setupPieceButtons() {
-    }
-
+    /**
+     * Sets state.
+     *
+     * @param state the state
+     */
     void setState(GameState state) { this.state = state; }
+
+    /**
+     * Gets state.
+     *
+     * @return GameState state
+     */
+    GameState getState() { return this.state; }
 }

@@ -5,7 +5,13 @@ import static stratego.PieceType.*;
 
 import java.util.HashSet;
 
+/**
+ * The type Marshall.
+ */
 public class Marshall extends Piece{
+    /**
+     * Instantiates a new Marshall.
+     */
     public Marshall() {
         super(1, MARSHALL, "1");
         setKills();

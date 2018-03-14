@@ -6,14 +6,26 @@ import java.util.*;
 
 import static stratego.PieceType.*;
 
+/**
+ * useful constants for use with stratego classes
+ */
 public class Constants {
-
     // disable instantiation
     private Constants() { }
+
+    /**
+     * The constant DEFAULT_BOARD_WIDTH.
+     */
     public static final int DEFAULT_BOARD_WIDTH = 10;
+    /**
+     * The constant DEFAULT_BOARD_HEIGHT.
+     */
     public static final int DEFAULT_BOARD_HEIGHT = 10;
+    /**
+     * The constant DEFAULT_PIECES_COUNT.
+     */
     public static final int DEFAULT_PIECES_COUNT = 40;
-    public static final String PIECE_LABEL_STYLE = "";
+
     private static PieceType default_pieces [] = {
             FLAG,
             BOMB, BOMB, BOMB, BOMB, BOMB, BOMB,
@@ -29,6 +41,11 @@ public class Constants {
             MARSHALL
     };
 
+    /**
+     * Map of enum SquareState to css style
+     *
+     * @usage String squareStyle = SQUARE_STYLES.get(SquareState.WATER);
+     */
     public static final Map<SquareState, String> SQUARE_STYLES;
     static {
         Map<SquareState, String> sqStyles = new EnumMap<>(SquareState.class);
@@ -40,12 +57,13 @@ public class Constants {
         sqStyles.put(SquareState.SELECTED_ORIGIN,
                 "-fx-background-color: black, grey; -fx-background-insets: 0, 0 1 1 0;");
         sqStyles.put(SquareState.OCCUPIED_P1,
-                "-fx-background-color: black, grey; -fx-background-insets: 0, 0 1 1 0;");
+                "-fx-background-color: black, lightblue; -fx-background-insets: 0, 0 1 1 0;");
         sqStyles.put(SquareState.OCCUPIED_P2,
-                "-fx-background-color: black, grey; -fx-background-insets: 0, 0 1 1 0;");
+                "-fx-background-color: black, lightred; -fx-background-insets: 0, 0 1 1 0;");
         sqStyles.put(SquareState.POSSIBLE_MOVE,
                 "-fx-background-color: black, orange; -fx-background-insets: 0, 0 1 1 0;");
 
+        // enforce that each SquareStyle and only SquareStyle keys exist
         if (!sqStyles.keySet().equals(EnumSet.allOf(SquareState.class))) {
             throw new RuntimeException(
                     "SQUARE_STYLES is missing entries for 1 or more SquareState constants."
@@ -54,6 +72,9 @@ public class Constants {
         SQUARE_STYLES = Collections.unmodifiableMap(sqStyles);
     }
 
+    /**
+     * Piece set for standard 10 X 10 40 piece Stratego game
+     */
     public static final List<PieceType> DEFAULT_PIECES = Collections.unmodifiableList(
             new ArrayList<PieceType>() {
                 {
@@ -64,6 +85,11 @@ public class Constants {
             }
     );
 
+    /**
+     * Map of PieceType to Piece instance
+     *
+     * @usage Piece piece = PIECETYPE_TO_PIECECLASS.get(MINER);
+     */
     public static final Map<PieceType, Piece> PIECETYPE_TO_PIECECLASS;
     static {
         Map<PieceType, Piece> pieceClasses = new EnumMap<>(PieceType.class);
@@ -82,6 +108,11 @@ public class Constants {
         PIECETYPE_TO_PIECECLASS = Collections.unmodifiableMap(pieceClasses);
     }
 
+    /**
+     * Map of String to PieceType
+     *
+     * @usage PieceType pt = PIECETYPESTRING_TO_PIECETYPE.get("MINER");
+     */
     public static final Map<String, PieceType> PIECETYPESTRING_TO_PIECETYPE;
     static {
         Map<String, PieceType> pieceStrings = new HashMap<String, PieceType>();
@@ -100,6 +131,9 @@ public class Constants {
         PIECETYPESTRING_TO_PIECETYPE = Collections.unmodifiableMap(pieceStrings);
     }
 
+    /**
+     * water Square coordinates for standard 10 X 10 40 piece Stratego game
+     */
     private static BoardCoords [] defaultWaterSquares = {
             new BoardCoords(4, 2),
             new BoardCoords(4, 3),
@@ -112,6 +146,9 @@ public class Constants {
 
     };
 
+    /**
+     * The constant DEFAULT_WATER_SQUARES.
+     */
     public static final List <BoardCoords> DEFAULT_WATER_SQUARES = Collections.unmodifiableList(
             new ArrayList<BoardCoords>() {
                 {
@@ -120,5 +157,4 @@ public class Constants {
                 }
             }
     );
-
 }

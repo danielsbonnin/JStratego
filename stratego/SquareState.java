@@ -1,5 +1,26 @@
 package stratego;
 
+/**
+ * The enum Square state.
+ */
 public enum SquareState {
-    SELECTED_ORIGIN, POSSIBLE_MOVE, OCCUPIED_P1, OCCUPIED_P2, EMPTY_LAND, WATER
+    /**
+     * Selected origin square state.
+     */
+    SELECTED_ORIGIN, /**
+     * Possible move square state.
+     */
+    POSSIBLE_MOVE, /**
+     * Occupied p 1 square state.
+     */
+    OCCUPIED_P1, /**
+     * Occupied p 2 square state.
+     */
+    OCCUPIED_P2, /**
+     * Empty land square state.
+     */
+    EMPTY_LAND, /**
+     * Water square state.
+     */
+    WATER
 }
