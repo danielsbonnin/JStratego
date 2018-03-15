@@ -84,13 +84,14 @@ public class Game {
         this.board = new Board(DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT, true);
         this.boardPane = gp;
         this.pieceButtons = new ArrayList<Button>(pieceButtons);
-        this.p1 = new Player(DEFAULT_PIECES);
-        this.p2 = new Player(DEFAULT_PIECES);
+        this.p1 = new Player(DEFAULT_PIECES, true);
+        this.p2 = new Player(DEFAULT_PIECES, false);
         this.state = GameState.SETUP_NOT_PIECE_SELECTED;
         this.scene = scene;
         this.selected = new BoardCoords(0, 0);
 
         this.curPossMoves = new ArrayList<Square>();
+        this.isp1Turn = true;
 
         // initialize boardPane with Square objects from this.board
         setupGridPane();
@@ -144,8 +145,9 @@ public class Game {
             int row = i / 10;
             int col = i % 10;
             Square sq = this.board.getSquare(row, col);
-            sq.setPiece(PIECETYPE_TO_PIECECLASS.get(DEFAULT_PIECES.get(i)));
-            sq.setState(OCCUPIED_P2);
+            Piece p = PIECETYPE_TO_PIECECLASS.get(DEFAULT_PIECES.get(i));
+            p.setP1(false);
+            sq.setPiece(p);
         }
     }
     /**
@@ -188,6 +190,7 @@ public class Game {
 
                 // instantiate new Piece of selected type
                 this.pieceInHand = PIECETYPE_TO_PIECECLASS.get(PIECETYPESTRING_TO_PIECETYPE.get(b.getId()));
+                this.pieceInHand.setP1(this.isp1Turn);
 
                 // decrement inventory count for this type
                 if (this.p1.inventory.remove(PIECETYPESTRING_TO_PIECETYPE.get(b.getId())) == 0) {
@@ -213,8 +216,9 @@ public class Game {
                     // no piece selected
                     if (this.state == SETUP_NOT_PIECE_SELECTED) {
                         // if piece here, pick it up
-                        if (!sq.isEmpty() && !(sq.getState() == WATER)) {
+                        if (!sq.isEmpty() && !(sq.getState() == WATER && sq.getPiece().getP1() == isp1Turn)) {
                             this.pieceInHand = sq.remove();
+
                             setState(SETUP_PIECE_SELECTED);
                             this.scene.getRoot().setCursor(Cursor.CROSSHAIR);
                         }
@@ -224,9 +228,19 @@ public class Game {
                     else if (sq.getState() == WATER) {  // WATER square clicked
                         return;                         // do nothing
                     } else if (!sq.isEmpty()) {  // square already contains a piece
+                        // opponent's piece
+                        if (sq.getPiece().getP1() != isp1Turn) {
+                            return;
+                        }
                         // put back piece in hand. pick up piece on board
-                        this.p1.inventory.replace(sq.getPiece().getPt());
+                        if (isp1Turn) {
+                            this.p1.inventory.replace(sq.getPiece().getPt());
+                        } else {
+                            this.p2.inventory.replace(sq.getPiece().getPt());
+                        }
+
                         sq.remove();
+
                         // Reset button in case replaced piece was last of its type
                         updatePieceButtons();
                     } else {
@@ -234,7 +248,6 @@ public class Game {
                         this.scene.getRoot().setCursor(Cursor.HAND);
                     }
                     sq.setPiece(this.pieceInHand);
-                    sq.setState(OCCUPIED_P1);
                 });
             }
         }
@@ -263,19 +276,26 @@ public class Game {
             int col = ((int) (e.getX())) / 50;
             BoardCoords bc = new BoardCoords(row, col);
             Square selectedSquare = this.board.getSquare(row, col);
+
             if (this.state == MOVE_NOT_ORIGIN_SELECTED) {
                 /** Get moves for piece at this Square
                  * @see Board#getMoves(int, int)
                  */
-
                 // coordinates at the clicked square
                 this.selected = new BoardCoords(row, col);
 
+                // player clicked empty square
+                if (selectedSquare.isEmpty()) {
+                    System.out.println("empty square");
+                    return;
+                }
+
+                Piece selectedPiece = selectedSquare.getPiece();
+
                 // make sure this is the current player's piece
-                if (
-                        (isp1Turn && selectedSquare.getState() != OCCUPIED_P1)
-                    ||  (!isp1Turn && selectedSquare.getState() != OCCUPIED_P2)
-                    ) return;
+                if (isp1Turn != selectedPiece.getP1()) return;
+
+                System.out.println("this piece is p1 piece");
 
                 // update UI to reflect curPossMoves
                 this.board.showPossibleMoves(this.selected);

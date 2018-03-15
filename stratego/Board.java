@@ -69,6 +69,7 @@ public class Board {
      * @param c the c
      * @param p the p
      * @return the boolean
+     * @deprecated
      */
     public boolean place(int r, int c, Piece p, boolean player1) {
         Square dest = board.get(r).get(c);
@@ -115,11 +116,9 @@ public class Board {
             } else { // attacker won, attacked piece is discarded
                 end.remove();
                 end.setPiece(stPiece);
-                end.setState(st.getState());
             }
         } else { // move to empty land
             end.setPiece(stPiece);
-            end.setState(st.getState());
         }
         // remove piece from start square.
         st.remove();
@@ -136,48 +135,76 @@ public class Board {
      */
     public List<Square> getMoves(int r, int c) {
         Square sq = board.get(r).get(c);
-        SquareState sqState = sq.getState();
         ArrayList<Square> poss = new ArrayList<Square>();
         if (sq.isEmpty()) return poss;
-        int n = sq.getPiece().getRange();
+        Piece stPiece = sq.getPiece();
+        int n = stPiece.getRange();
         for (int i = r - 1; i >= 0 && (r-i <= n); i--) {
             Square cur = board.get(i).get(c);
+
             if (cur.getState() == WATER) break;
 
-            // this player's piece
-            if (cur.getState() == sqState) break;
-            poss.add(cur);
-            if (!cur.isEmpty()) break;
+            // cur contains a piece
+            if (!cur.isEmpty()) {
+                Piece curPiece = cur.getPiece();
+                if (curPiece.getP1() == stPiece.getP1())  // friendly piece
+                    break;
+                poss.add(cur);  // opponent piece
+                break;
+            } else {
+                poss.add(cur);
+            }
         }
 
         for (int i = r + 1; i < this.height && (i - r <= n); i++) {
             Square cur = board.get(i).get(c);
+
             if (cur.getState() == WATER) break;
 
-            // this player's piece
-            if (cur.getState() == sqState) break;
-            poss.add(cur);
-            if (!cur.isEmpty()) break;
+            // cur contains a piece
+            if (!cur.isEmpty()) {
+                Piece curPiece = cur.getPiece();
+                if (curPiece.getP1() == stPiece.getP1())  // friendly piece
+                    break;
+                poss.add(cur);  // opponent piece
+                break;
+            } else {
+                poss.add(cur);
+            }
         }
 
         for (int i = c - 1; i >= 0 && (c-i <= n); i--) {
             Square cur = board.get(r).get(i);
+
             if (cur.getState() == WATER) break;
 
-            // this player's piece
-            if (cur.getState() == sqState) break;
-            poss.add(cur);
-            if (!cur.isEmpty()) break;
+            // cur contains a piece
+            if (!cur.isEmpty()) {
+                Piece curPiece = cur.getPiece();
+                if (curPiece.getP1() == stPiece.getP1())  // friendly piece
+                    break;
+                poss.add(cur);  // opponent piece
+                break;
+            } else {  // square is empty
+                poss.add(cur);
+            }
         }
 
         for (int i = c + 1; i < this.width && (i-c <= n); i++) {
             Square cur = board.get(r).get(i);
+
             if (cur.getState() == WATER) break;
 
-            // this player's piece
-            if (cur.getState() == sqState) break;
-            poss.add(cur);
-            if (!cur.isEmpty()) break;
+            // cur contains a piece
+            if (!cur.isEmpty()) {
+                Piece curPiece = cur.getPiece();
+                if (curPiece.getP1() == stPiece.getP1())  // friendly piece
+                    break;
+                poss.add(cur);  // opponent piece
+                break;
+            } else {  // square is empty
+                poss.add(cur);
+            }
         }
         return poss;
     }

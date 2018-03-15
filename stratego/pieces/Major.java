@@ -5,7 +5,13 @@ import static stratego.PieceType.*;
 
 import java.util.HashSet;
 
+/**
+ * The type Major.
+ */
 public class Major extends Piece{
+    /**
+     * Instantiates a new Major.
+     */
     public Major() {
         super(1, MAJOR, "4");
         setKills();

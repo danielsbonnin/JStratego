@@ -6,7 +6,13 @@ import java.util.HashSet;
 
 import static stratego.PieceType.*;
 
+/**
+ * The type Bomb.
+ */
 public class Bomb extends Piece {
+    /**
+     * Instantiates a new Bomb.
+     */
     public Bomb() {
         super(0, BOMB, "B");
         setKills();

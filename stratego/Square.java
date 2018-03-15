@@ -5,8 +5,7 @@ import javafx.scene.layout.Pane;
 import stratego.pieces.Piece;
 
 import static stratego.Constants.SQUARE_STYLES;
-import static stratego.SquareState.EMPTY_LAND;
-import static stratego.SquareState.POSSIBLE_MOVE;
+import static stratego.SquareState.*;
 
 /**
  * The type Square.
@@ -14,7 +13,6 @@ import static stratego.SquareState.POSSIBLE_MOVE;
 public class Square extends Pane {
     private Piece piece = null;
     private boolean isEmpty = true;
-    private boolean isSelected;
     private SquareState state;
 
     /**
@@ -82,6 +80,7 @@ public class Square extends Pane {
         p.reveal();
         this.isEmpty = false;
         this.labelText.setText(p.getLabelText());
+        setState(p.getP1() ? OCCUPIED_P1 : OCCUPIED_P2);
     }
 
     /**
