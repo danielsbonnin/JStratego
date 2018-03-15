@@ -227,4 +227,8 @@ public class Board {
         Square selected = this.board.get(r).get(c);
         selected.setState(selected.getLast());
     }
+
+    public BoardState toBoardState() {
+        return new BoardState(1, 2);
+    }
 }

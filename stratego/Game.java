@@ -241,15 +241,6 @@ public class Game {
     }
 
     /**
-     * Display possible moves of Piece at currently selected Square
-     */
-    public void showPossMoves() {
-        for (Square p : this.curPossMoves) {
-            p.setState(POSSIBLE_MOVE);
-        }
-    }
-
-    /**
      * Game play
      */
     public void gameLoop() throws IllegalStateException{
