@@ -47,6 +47,7 @@ public class Game {
      */
     private Player p1;
     private Player p2;
+    private boolean isp1Turn;
 
     /**
      * piece currently "held" by player while setting up board
@@ -130,11 +131,31 @@ public class Game {
     }
 
     /**
+     * Stub for placing p2 pieces during development
+     */
+    public void piecePlacementP2() {
+        //
+        try {
+            assert (this.board.width == 10 && this.board.height == 10);
+        } catch (AssertionError e) {
+            System.out.println("Board dimensions should be 10X10 for piecePlacementP2 stub method.");
+        }
+        for (int i = 0; i < 40; i++) {
+            int row = i / 10;
+            int col = i % 10;
+            Square sq = this.board.getSquare(row, col);
+            sq.setPiece(PIECETYPE_TO_PIECECLASS.get(DEFAULT_PIECES.get(i)));
+            sq.setState(OCCUPIED_P2);
+        }
+    }
+    /**
      * Setup UI for placing pieces on the board
      */
     public void piecePlacementLoop() {
         updatePieceButtons();
 
+        // setup test p2 pieces
+        piecePlacementP2();
         // GUI button to indicate finished setup
         Button finishedButton = (Button) this.scene.lookup("#btn_setup_finished");
 
@@ -208,11 +229,12 @@ public class Game {
                         sq.remove();
                         // Reset button in case replaced piece was last of its type
                         updatePieceButtons();
-                    } else {}
+                    } else {
+                        setState(SETUP_NOT_PIECE_SELECTED);
+                        this.scene.getRoot().setCursor(Cursor.HAND);
+                    }
                     sq.setPiece(this.pieceInHand);
                     sq.setState(OCCUPIED_P1);
-
-                    this.scene.getRoot().setCursor(Cursor.HAND);
                 });
             }
         }
@@ -230,9 +252,9 @@ public class Game {
     /**
      * Game play
      */
-    public void gameLoop() {
+    public void gameLoop() throws IllegalStateException{
         this.setState(MOVE_NOT_ORIGIN_SELECTED);
-
+        this.isp1Turn = true;
         // remove square click handlers
         for (int i = 0; i < this.board.height; i++) {
             for (int j = 0; j < this.board.width; j++) {
@@ -249,31 +271,32 @@ public class Game {
             int row = ((int) (e.getY())) / 50;
             int col = ((int) (e.getX())) / 50;
             BoardCoords bc = new BoardCoords(row, col);
+            Square selectedSquare = this.board.getSquare(row, col);
             if (this.state == MOVE_NOT_ORIGIN_SELECTED) {
                 /** Get moves for piece at this Square
                  * @see Board#getMoves(int, int)
                  */
 
-                this.curPossMoves.addAll(this.board.getMoves(bc.r, bc.c));
-                if (this.curPossMoves.isEmpty())  // no piece or non-moving piece
-                    return;
+                // coordinates at the clicked square
+                this.selected = new BoardCoords(row, col);
+
+                // make sure this is the current player's piece
+                if (
+                        (isp1Turn && selectedSquare.getState() != OCCUPIED_P1)
+                    ||  (!isp1Turn && selectedSquare.getState() != OCCUPIED_P2)
+                    ) return;
 
                 // update UI to reflect curPossMoves
-                showPossMoves();
+                this.board.showPossibleMoves(this.selected);
+
                 setState(MOVE_ORIGIN_SELECTED);
-                this.selected = new BoardCoords(row, col);
-            } else if (this.state == MOVE_ORIGIN_SELECTED) {
-
-                // legal move
-                if (this.board.move(selected.r, selected.c, row, col)) {
+            } else if (this.state == MOVE_ORIGIN_SELECTED) {  // legal move
+                if (this.board.move(selected, bc)) {
                     setState(MOVE_NOT_ORIGIN_SELECTED);
-
-                    // reset UI Squares affected by showPossMoves
-                    while (!this.curPossMoves.isEmpty())
-                        this.curPossMoves.remove(0).resetState();
-                    this.board.getSquare(selected.r,selected.c).setState(EMPTY_LAND);
-                    this.board.getSquare(row, col).setState(OCCUPIED_P1);
+                    isp1Turn = !isp1Turn;  // change player
                 }
+            } else {
+                throw (new IllegalStateException("Invalid game state for game loop"));
             }
         });
     }

@@ -51,7 +51,7 @@ public class Constants {
         Map<SquareState, String> sqStyles = new EnumMap<>(SquareState.class);
 
         sqStyles.put(SquareState.WATER,
-                "-fx-background-color: black, lightblue; -fx-background-insets: 0, 0 1 1 0;");
+                "-fx-background-color: black, darkblue; -fx-background-insets: 0, 0 1 1 0;");
         sqStyles.put(SquareState.EMPTY_LAND,
                 "-fx-background-color: black, lightgreen; -fx-background-insets: 0, 0 1 1 0;");
         sqStyles.put(SquareState.SELECTED_ORIGIN,
@@ -59,7 +59,7 @@ public class Constants {
         sqStyles.put(SquareState.OCCUPIED_P1,
                 "-fx-background-color: black, lightblue; -fx-background-insets: 0, 0 1 1 0;");
         sqStyles.put(SquareState.OCCUPIED_P2,
-                "-fx-background-color: black, lightred; -fx-background-insets: 0, 0 1 1 0;");
+                "-fx-background-color: black, pink; -fx-background-insets: 0, 0 1 1 0;");
         sqStyles.put(SquareState.POSSIBLE_MOVE,
                 "-fx-background-color: black, orange; -fx-background-insets: 0, 0 1 1 0;");
 

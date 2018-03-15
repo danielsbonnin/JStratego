@@ -6,6 +6,7 @@ import stratego.pieces.Piece;
 
 import static stratego.Constants.SQUARE_STYLES;
 import static stratego.SquareState.EMPTY_LAND;
+import static stratego.SquareState.POSSIBLE_MOVE;
 
 /**
  * The type Square.
@@ -20,6 +21,11 @@ public class Square extends Pane {
      * The most recent state
      */
     private SquareState last;
+
+    /**
+     * Whether the square is highlighted.
+     */
+    private boolean isHighlighted;
     private Label labelText;
 
     /**
@@ -32,6 +38,7 @@ public class Square extends Pane {
         this.setState(state);
         this.labelText = new Label("");
         this.getChildren().add(this.labelText);
+        this.isHighlighted = false;
 
         // TODO: use constant cell size to center labelText
         this.labelText.setLayoutX(12);
@@ -52,6 +59,19 @@ public class Square extends Pane {
      */
     boolean isEmpty() { return this.isEmpty; }
 
+    boolean getIsHighlighted() { return isHighlighted; }
+    void highlight() {
+        if (!this.isHighlighted)
+            this.isHighlighted = true;
+            this.last = this.state;
+            setState(POSSIBLE_MOVE);
+    }
+    void unHighlight() {
+        if (this.isHighlighted) {
+            this.isHighlighted = false;
+            this.setState(this.last);
+        }
+    }
     /**
      * Sets piece.
      *
@@ -94,14 +114,8 @@ public class Square extends Pane {
      * @param state the state
      */
     public void setState ( SquareState state) {
-        if (state == EMPTY_LAND) {
-            this.last = EMPTY_LAND;
-        }
-        else if (this.state != state) {
-            this.last = this.state;
-        }
         this.state = state;
-        setSqstyle(SQUARE_STYLES.get(state));
+        this.setSqstyle(SQUARE_STYLES.get(state));
     }
 
     /**

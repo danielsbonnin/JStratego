@@ -88,29 +88,42 @@ public class Board {
     /**
      * Move boolean.
      *
-     * @param startRow the start row
-     * @param startCol the start col
-     * @param endRow   the end row
-     * @param endCol   the end col
-     * @return the boolean
+     * @param origin the start coordinates
+     * @param dest   the destination coordinates
+     * @return boolean valid move
      */
-    public boolean move(int startRow, int startCol, int endRow, int endCol) {
-        Square st = getSquare(startRow, startCol);
+    public boolean move(BoardCoords origin, BoardCoords dest) {
+        Square st = getSquare(origin.r, origin.c);
         Piece stPiece = st.getPiece();
-        Square end = getSquare(endRow, endCol);
-        List<Square> moves = getMoves(startRow, startCol);
-        if (!moves.contains(end)) return false;
-        st.remove();
+        Square end = getSquare(dest.r, dest.c);
+
+        // unhighlight possible move squares
+        hidePossibleMoves(origin);
+
+        List<Square> moves = getMoves(origin.r, origin.c);
+        boolean legalMove = moves.contains(end);
+
+        if (!legalMove) return false;
+
         if (!end.isEmpty()) {  // attack move
             PieceType eType = end.getPiece().getPt();
 
             // attacker lost, attacking piece is discarded
             if (!stPiece.getKills().contains(eType)) {
-                return true;
+                // pass
+
+            } else { // attacker won, attacked piece is discarded
+                end.remove();
+                end.setPiece(stPiece);
+                end.setState(st.getState());
             }
-            end.remove();
+        } else { // move to empty land
+            end.setPiece(stPiece);
+            end.setState(st.getState());
         }
-        end.setPiece(stPiece);
+        // remove piece from start square.
+        st.remove();
+
         return true;
     }
 
@@ -167,6 +180,26 @@ public class Board {
             if (!cur.isEmpty()) break;
         }
         return poss;
+    }
+
+    /**
+     * Highlight squares of possible moves
+     */
+    void showPossibleMoves(BoardCoords origin) {
+        List<Square> poss = getMoves(origin.r, origin.c);
+        for (Square m : poss) {
+            m.highlight();
+        }
+    }
+
+    /**
+     * unHighlight squares of possible moves
+     */
+    void hidePossibleMoves(BoardCoords origin) {
+        List<Square> poss = getMoves(origin.r, origin.c);
+        for (Square m : poss) {
+            m.unHighlight();
+        }
     }
 
     // methods for setting state
