@@ -5,7 +5,13 @@ import static stratego.PieceType.*;
 
 import java.util.HashSet;
 
+/**
+ * The type Spy.
+ */
 public class Spy extends Piece{
+    /**
+     * Instantiates a new Spy.
+     */
     public Spy() {
         super(1, SPY, "Spy");
         setKills();

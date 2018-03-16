@@ -1,4 +1,8 @@
-package stratego;
+package stratego.players;
+
+import stratego.Game;
+import stratego.PieceInventory;
+import stratego.PieceType;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -47,7 +51,7 @@ public class LocalPlayer implements Runnable{
         this.g = g;
         this.isP1 = isP1;
         setupInventory(pieces);
-        //new Thread(this).start();
+        new Thread(this).start();
     }
 
     private void connect() throws IOException {
@@ -58,7 +62,7 @@ public class LocalPlayer implements Runnable{
                 try {
                     PrintWriter out =
                             new PrintWriter(socket.getOutputStream(), true);
-                    out.println("Hi, I'm Player 1.");
+                    out.println("You didn't say anything.");
                 } catch (Exception e) {
                     socket.close();
                 }
@@ -101,5 +105,8 @@ public class LocalPlayer implements Runnable{
      */
     public String getHandle() {
         return this.handle;
+    }
+    public PieceInventory getInventory() {
+        return this.inventory;
     }
 }

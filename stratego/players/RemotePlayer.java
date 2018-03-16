@@ -1,23 +1,22 @@
-package stratego;
+package stratego.players;
+
+import stratego.Game;
+import stratego.Move;
+import stratego.board.BoardCoords;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.Buffer;
 
 /**
- * A remote opponent.
- *
  * @author Daniel Bonnin
  */
 public class RemotePlayer implements IOpponent, Runnable{
     Game g;
     public RemotePlayer(Game g)  {
         this.g = g;
-        //new Thread(this).start();
+        new Thread(this).start();
     }
 
 

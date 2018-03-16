@@ -1,4 +1,6 @@
-package stratego;
+package stratego.players;
+
+import stratego.Move;
 
 /**
  * This interface represents the actions of a Stratego LocalPlayer

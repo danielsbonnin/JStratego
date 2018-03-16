@@ -1,6 +1,7 @@
 package stratego;
 
 import com.google.gson.Gson;
+import stratego.board.BoardCoords;
 
 /**
  * @author Daniel Bonnin

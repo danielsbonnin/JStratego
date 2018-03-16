@@ -5,7 +5,13 @@ import static stratego.PieceType.*;
 
 import java.util.HashSet;
 
+/**
+ * The type General.
+ */
 public class General extends Piece{
+    /**
+     * Instantiates a new General.
+     */
     public General() {
         super(1, GENERAL, "2");
         setKills();

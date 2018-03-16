@@ -5,7 +5,13 @@ import static stratego.PieceType.*;
 
 import java.util.HashSet;
 
+/**
+ * The type Lieutenant.
+ */
 public class Lieutenant extends Piece{
+    /**
+     * Instantiates a new Lieutenant.
+     */
     public Lieutenant() {
         super(1, LIEUTENANT, "6");
         setKills();

@@ -5,7 +5,13 @@ import static stratego.PieceType.*;
 
 import java.util.HashSet;
 
+/**
+ * The type Sergeant.
+ */
 public class Sergeant extends Piece{
+    /**
+     * Instantiates a new Sergeant.
+     */
     public Sergeant() {
         super(1, SERGEANT, "7");
         setKills();
