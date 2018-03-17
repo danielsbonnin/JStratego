@@ -23,4 +23,8 @@ public class BoardCoords {
         this.r = r;
         this.c = c;
     }
+
+    public String toString() {
+        return "(" + this.c + ", " + this.r + ")";
+    }
 }

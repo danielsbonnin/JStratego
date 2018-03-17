@@ -79,7 +79,6 @@ public class Stratego extends Application {
 
         StrategoUI ui = new StrategoUI(gb, pieceButtons, 10, 10);
 
-        StrategoUI.newClick.addListener(game);  // notify Game when new Move is available from UI
 
     }
 }

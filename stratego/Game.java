@@ -56,10 +56,16 @@ public class Game implements ChangeListener<Boolean>{
     private boolean isp1Turn;
 
     /**
-     * piece currently "held" by player while setting up board
+     * PieceType currently "held" by player
      * @see stratego.pieces.Piece
      */
-    private Piece pieceInHand;
+    private PieceType pieceInHand;
+
+
+    /**
+     * coordinates of picked-up piece during setup
+     */
+    private BoardCoords pickedUpPiece;
 
     /**
      * @see GameState
@@ -109,10 +115,48 @@ public class Game implements ChangeListener<Boolean>{
         // player sets pieces on the board
         piecePlacementLoop();
 
+        StrategoUI.newClick.addListener(this);  // notify Game when new Move is available from UI
         // game play
         //gameLoop();
     }
 
+    /**
+     * piece picked up during setup
+     */
+    private void pickupClick(BoardCoords bc) {
+        if (this.board.validPickup(bc)) {
+            this.pieceInHand= this.board.pickupPiece(bc);
+            setState(SETUP_PIECE_SELECTED);
+        }
+    }
+
+    /**
+     * piece placed during setup
+     */
+    private void placementClick(BoardCoords bc) {
+        this.board.tryPlacePiece(bc, this.pieceInHand)
+        setState(SETUP_NOT_PIECE_SELECTED);
+    }
+
+    /**
+     * origin click during game
+     */
+    private void originClick(BoardCoords bc) {
+        if (this.board.validOrigin(bc)) {
+            this.pickedUpPiece = bc;
+            this.board.showPossibleMoves(bc);
+            setState(MOVE_ORIGIN_SELECTED);
+        } else {
+            setState(MOVE_NOT_ORIGIN_SELECTED);
+        }
+    }
+
+    /**
+     * piece destination click during game
+     */
+    private void destclick(BoardCoords bc) {
+
+    }
     /**
      * Set style of piece buttons according to quantity in p1's inventory
      * @see LocalPlayer#inventory
@@ -343,6 +387,28 @@ public class Game implements ChangeListener<Boolean>{
      */
     GameState getState() { return this.state; }
 
+    /**
+     * Process coordinates of a gameBoard click
+     * @param bc grid coordinates of click
+     */
+    private void boardClick(BoardCoords bc) {
+        switch(this.state) {
+            case SETUP_NOT_PIECE_SELECTED:
+                if (this.board.validPickup(bc)) {
+                    this.pickedUpPiece = bc;
+                    setState(SETUP_PIECE_SELECTED);
+                }
+                break;
+            case SETUP_PIECE_SELECTED:
+                break;
+            case MOVE_NOT_ORIGIN_SELECTED:
+                break;
+            case MOVE_ORIGIN_SELECTED:
+                break;
+            default:
+                break;
+        }
+    }
     @Override
     public void changed(ObservableValue<? extends Boolean> obs, Boolean old, Boolean newVal) {
         System.out.println("new move reported: " + StrategoUI.getCoords());

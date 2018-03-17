@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static stratego.Constants.DEFAULT_WATER_SQUARES;
+import static stratego.Constants.PIECETYPE_TO_PIECECLASS;
 import static stratego.board.SquareState.*;
 
 /**
@@ -24,6 +25,12 @@ public class Board {
     int height;
 
     /**
+     * The highest row allowed for placing pieces during setup
+     */
+    int placementRowStIdx;
+
+
+    /**
      * Instantiates a new Board.
      *
      * @param width               the width
@@ -34,6 +41,10 @@ public class Board {
         this.width = width;
         this.height = height;
         this.board = new ArrayList< List<Square> >();
+
+        // restrict board squares valid for placement
+        this.placementRowStIdx = this.height - ((this.height / 2) - 1);
+
         for (int i = 0; i < this.height; i++) {
             ArrayList<Square> cur = new ArrayList<Square>();
             for (int j = 0; j < this.width; j++) {
@@ -62,6 +73,54 @@ public class Board {
     // Methods for updating GUI
 
     // Methods for moving and attacking
+
+    /**
+     * Whether square is valid origin for pickup
+     */
+    public boolean validPickup(BoardCoords bc) {
+        Square pickupSq = getSquare(bc.r, bc.c);
+        // not empty and piece is player1
+        return (!pickupSq.isEmpty() && pickupSq.getPiece().getP1());
+    }
+
+    /**
+     * remove piece at coordinates if valid for pickup
+     * @param bc board coordinates to pick up
+     * @return
+     */
+    public PieceType pickupPiece(BoardCoords bc) {
+        PieceType pt = getSquare(bc.r, bc.c).getPiece().getPt();
+        getSquare(bc.r, bc.c).remove();
+        return pt;
+    }
+
+    /**
+     * Whether square is valid destination for placement during setup
+     */
+    public boolean validPlacement(BoardCoords bc) {
+        Square placementSq = getSquare(bc.r, bc.c);
+        return (bc.r <= this.placementRowStIdx && placementSq.isEmpty());
+    }
+
+    /**
+     * Try to place a piece on the board during setup
+     * @param bc the board coordinates
+     * @param pt the type of piece
+     */
+    public boolean tryPlacePiece(BoardCoords bc, PieceType pt) {
+        if (!validPlacement(bc)) return false;
+        Square placeSq = getSquare(bc.r, bc.c);
+        placeSq.setPiece(PIECETYPE_TO_PIECECLASS.get(pt));
+        return true;
+    }
+
+    /**
+     * Whether square is valid origin for move
+     */
+    public boolean validOrigin(BoardCoords bc) {
+        Square originSq = getSquare(bc.r, bc.c);
+        return (!originSq.isEmpty() && originSq.getPiece().getP1() && originSq.getPiece().getRange() > 0);
+    }
 
     /**
      * Place boolean.
