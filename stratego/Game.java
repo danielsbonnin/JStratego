@@ -1,5 +1,7 @@
 package stratego;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
@@ -27,7 +29,7 @@ import static stratego.board.SquareState.*;
  * @author Daniel Bonnin
  * //TODO separate game logic from ui
  */
-public class Game {
+public class Game implements ChangeListener<Boolean>{
     /**
      * A 2d Array of Square objects
      * @see Square Square
@@ -340,4 +342,9 @@ public class Game {
      * @return GameState state
      */
     GameState getState() { return this.state; }
+
+    @Override
+    public void changed(ObservableValue<? extends Boolean> obs, Boolean old, Boolean newVal) {
+        System.out.println("new move reported: " + StrategoUI.getCoords());
+    }
 }

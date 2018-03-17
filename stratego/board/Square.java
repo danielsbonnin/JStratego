@@ -41,6 +41,7 @@ public class Square extends Pane {
         // TODO: use constant cell size to center labelText
         this.labelText.setLayoutX(12);
         this.labelText.setLayoutY(12);
+        this.labelText.setMouseTransparent(true);
     }
 
     /**

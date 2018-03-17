@@ -51,7 +51,7 @@ public class LocalPlayer implements Runnable{
         this.g = g;
         this.isP1 = isP1;
         setupInventory(pieces);
-        new Thread(this).start();
+        //new Thread(this).start();
     }
 
     private void connect() throws IOException {

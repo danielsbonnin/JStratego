@@ -16,7 +16,7 @@ public class RemotePlayer implements IOpponent, Runnable{
     Game g;
     public RemotePlayer(Game g)  {
         this.g = g;
-        new Thread(this).start();
+        //new Thread(this).start();
     }
 
 
