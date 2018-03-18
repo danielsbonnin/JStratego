@@ -63,7 +63,7 @@ public class Game implements ChangeListener<Boolean>{
 
 
     /**
-     * coordinates of picked-up piece during setup
+     * coordinates of picked-up piece
      */
     private BoardCoords pickedUpPiece;
 
@@ -79,7 +79,6 @@ public class Game implements ChangeListener<Boolean>{
 
     /**
      * Represents all possible moves from the selected board square
-     * @see Board#getMoves(int, int)
      */
     private List<Square> curPossMoves;
 
@@ -103,21 +102,34 @@ public class Game implements ChangeListener<Boolean>{
         this.scene = scene;
         this.selected = new BoardCoords(0, 0);
 
-        this.curPossMoves = new ArrayList<Square>();
+        //this.curPossMoves = new ArrayList<Square>();
         this.isp1Turn = true;
 
         // initialize boardPane with Square objects from this.board
         setupGridPane();
 
+        setupPieceButtons();
+
         // initialize piece buttons according to player's inventory
         updatePieceButtons();
 
-        // player sets pieces on the board
-        piecePlacementLoop();
-
         StrategoUI.newClick.addListener(this);  // notify Game when new Move is available from UI
-        // game play
-        //gameLoop();
+
+        // GUI button to indicate finished setup
+        Button finishedButton = (Button) this.scene.lookup("#btn_setup_finished");
+
+        // finished button click handler
+        finishedButton.setOnMouseClicked( e-> {
+            System.out.println("finishedButton clicked");
+            ButtonBar pieceButtonBar = (ButtonBar) this.scene.lookup("#pieceButtonBar");
+            VBox finishedButtonVBox = (VBox) this.scene.lookup("#btn_finished_vbox");
+
+            VBox vbox = (VBox) this.scene.lookup("#vbox");
+            vbox.getChildren().removeAll(pieceButtonBar, finishedButtonVBox);
+
+            setState(MOVE_NOT_ORIGIN_SELECTED);
+        });
+        setState(SETUP_NOT_PIECE_SELECTED);
     }
 
     /**
@@ -127,6 +139,7 @@ public class Game implements ChangeListener<Boolean>{
         if (this.board.validPickup(bc)) {
             this.pieceInHand= this.board.pickupPiece(bc);
             setState(SETUP_PIECE_SELECTED);
+            this.scene.getRoot().setCursor(Cursor.CROSSHAIR);
         }
     }
 
@@ -134,7 +147,11 @@ public class Game implements ChangeListener<Boolean>{
      * piece placed during setup
      */
     private void placementClick(BoardCoords bc) {
-        this.board.tryPlacePiece(bc, this.pieceInHand)
+        System.out.println("placement click at: " + bc.toString() + " pieceInHand: " + this.pieceInHand.toString());
+        if (!this.board.tryPlacePiece(bc, this.pieceInHand)) {
+            System.out.println("invalid placement");
+        }
+        this.scene.getRoot().setCursor(Cursor.HAND);
         setState(SETUP_NOT_PIECE_SELECTED);
     }
 
@@ -147,6 +164,7 @@ public class Game implements ChangeListener<Boolean>{
             this.board.showPossibleMoves(bc);
             setState(MOVE_ORIGIN_SELECTED);
         } else {
+            System.out.println("invalid origin");
             setState(MOVE_NOT_ORIGIN_SELECTED);
         }
     }
@@ -154,9 +172,14 @@ public class Game implements ChangeListener<Boolean>{
     /**
      * piece destination click during game
      */
-    private void destclick(BoardCoords bc) {
-
+    private void destClick(BoardCoords dest) {
+        Move proposed = new Move(this.pickedUpPiece, dest, false, true);
+        if (!this.board.move(proposed, this.isp1Turn)) {
+            System.out.println("Invalid move.");
+        }
+        setState(MOVE_NOT_ORIGIN_SELECTED);
     }
+
     /**
      * Set style of piece buttons according to quantity in p1's inventory
      * @see LocalPlayer#inventory
@@ -204,7 +227,7 @@ public class Game implements ChangeListener<Boolean>{
     /**
      * Setup UI for placing pieces on the board
      */
-    public void piecePlacementLoop() {
+    private void setupPieceButtons() {
         updatePieceButtons();
 
         // setup test p2 pieces
@@ -212,39 +235,19 @@ public class Game implements ChangeListener<Boolean>{
         // GUI button to indicate finished setup
         Button finishedButton = (Button) this.scene.lookup("#btn_setup_finished");
 
-        // finished button click handler
-        finishedButton.setOnMouseClicked( e-> {
-            System.out.println("finishedButton clicked");
-            ButtonBar pieceButtonBar = (ButtonBar) this.scene.lookup("#pieceButtonBar");
-            VBox finishedButtonVBox = (VBox) this.scene.lookup("#btn_finished_vbox");
-
-            VBox vbox = (VBox) this.scene.lookup("#vbox");
-            vbox.getChildren().removeAll(pieceButtonBar, finishedButtonVBox);
-
-            // Start game loop
-            gameLoop();
-        });
-
-        // restrict board squares valid for placement
-        int placementRowStIdx = this.board.getHeight() - ((this.board.getHeight() / 2) - 1);
-
         // initialize piece buttons
         for (Button b : this.pieceButtons) {
             // User clicked on a piece button
             b.setOnMouseClicked(e-> {
                 // Piece already selected. Put back old piece
                 if (this.state == SETUP_PIECE_SELECTED) {
-                    this.p1.getInventory().replace(this.pieceInHand.getPt());
+                    this.p1.getInventory().replace(this.pieceInHand);
                     this.setState(SETUP_NOT_PIECE_SELECTED);
                     updatePieceButtons();
                 }
-
-                // instantiate new Piece of selected type
-                this.pieceInHand = PIECETYPE_TO_PIECECLASS.get(PIECETYPESTRING_TO_PIECETYPE.get(b.getId()));
-                this.pieceInHand.setP1(this.isp1Turn);
-
+                this.pieceInHand = PIECETYPESTRING_TO_PIECETYPE.get(b.getId());
                 // decrement inventory count for this type
-                if (this.p1.getInventory().remove(PIECETYPESTRING_TO_PIECETYPE.get(b.getId())) == 0) {
+                if (this.p1.getInventory().remove(this.pieceInHand) == 0) {
                     // last piece of this type. disable button
                     // TODO: make constant
                     b.setStyle("-fx-background-color: red;");
@@ -256,110 +259,6 @@ public class Game implements ChangeListener<Boolean>{
                 setState(SETUP_PIECE_SELECTED);
             });
         }
-
-        // initialize square click handlers for placement
-        for (int i = placementRowStIdx; i < this.board.getHeight(); i++) {
-            for (int j = 0; j < this.board.getHeight(); j++) {
-                Square sq = this.board.getSquare(i, j);
-
-                // click handler for grid squares
-                sq.setOnMouseClicked(e -> {
-                    // no piece selected
-                    if (this.state == SETUP_NOT_PIECE_SELECTED) {
-                        // if piece here, pick it up
-                        if (!sq.isEmpty() && !(sq.getState() == WATER && sq.getPiece().getP1() == isp1Turn)) {
-                            this.pieceInHand = sq.remove();
-
-                            setState(SETUP_PIECE_SELECTED);
-                            this.scene.getRoot().setCursor(Cursor.CROSSHAIR);
-                        }
-                        return;
-                    }
-                    // piece is currently selected
-                    else if (sq.getState() == WATER) {  // WATER square clicked
-                        return;                         // do nothing
-                    } else if (!sq.isEmpty()) {  // square already contains a piece
-                        // opponent's piece
-                        if (sq.getPiece().getP1() != isp1Turn) {
-                            return;
-                        }
-                        // put back piece in hand. pick up piece on board
-                        if (isp1Turn) {
-                            this.p1.getInventory().replace(sq.getPiece().getPt());
-                        } else {
-                            // TODO: REMOVE the p2 stuff
-                            //this.p2.inventory.replace(sq.getPiece().getPt());
-                        }
-
-                        sq.remove();
-
-                        // Reset button in case replaced piece was last of its type
-                        updatePieceButtons();
-                    } else {
-                        setState(SETUP_NOT_PIECE_SELECTED);
-                        this.scene.getRoot().setCursor(Cursor.HAND);
-                    }
-                    sq.setPiece(this.pieceInHand);
-                });
-            }
-        }
-    }
-
-    /**
-     * Game play
-     */
-    public void gameLoop() throws IllegalStateException{
-        this.setState(MOVE_NOT_ORIGIN_SELECTED);
-        // remove square click handlers
-        for (int i = 0; i < this.board.getHeight(); i++) {
-            for (int j = 0; j < this.board.getWidth(); j++) {
-               Square sq = this.board.getSquare(i, j);
-                sq.setOnMouseClicked(null);
-            }
-        }
-
-        // Set click handler for boardPane
-        // *Square instances do not know their board coordinates
-        //  so we calculate the grid relative to board bounds
-        this.boardPane.setOnMousePressed(e->{
-            // calculate board coordinates
-            int row = ((int) (e.getY())) / 50;
-            int col = ((int) (e.getX())) / 50;
-            BoardCoords bc = new BoardCoords(row, col);
-            Square selectedSquare = this.board.getSquare(row, col);
-
-            if (this.state == MOVE_NOT_ORIGIN_SELECTED) {
-                /** Get moves for piece at this Square
-                 * @see Board#getMoves(int, int)
-                 */
-                // coordinates at the clicked square
-                this.selected = new BoardCoords(row, col);
-
-                // player clicked empty square
-                if (selectedSquare.isEmpty()) {
-                    return;
-                }
-
-                Piece selectedPiece = selectedSquare.getPiece();
-
-                // make sure this is the current player's piece
-                if (isp1Turn != selectedPiece.getP1()) return;
-
-                // update UI to reflect curPossMoves
-                this.board.showPossibleMoves(this.selected);
-
-                setState(MOVE_ORIGIN_SELECTED);
-            } else if (this.state == MOVE_ORIGIN_SELECTED) {
-                if (this.board.move(selected, bc)) {  // valid move
-                    setState(MOVE_NOT_ORIGIN_SELECTED);
-                    isp1Turn = !isp1Turn;  // change player
-                } else {                              // invalid move
-                    // pass
-                }
-            } else {
-                throw (new IllegalStateException("Invalid game state for game loop"));
-            }
-        });
     }
 
     /**
@@ -378,7 +277,9 @@ public class Game implements ChangeListener<Boolean>{
      *
      * @param state the state
      */
-    void setState(GameState state) { this.state = state; }
+    void setState(GameState state) {
+        System.out.println("new game state: " + state.toString());
+        this.state = state; }
 
     /**
      * Gets state.
@@ -394,23 +295,25 @@ public class Game implements ChangeListener<Boolean>{
     private void boardClick(BoardCoords bc) {
         switch(this.state) {
             case SETUP_NOT_PIECE_SELECTED:
-                if (this.board.validPickup(bc)) {
-                    this.pickedUpPiece = bc;
-                    setState(SETUP_PIECE_SELECTED);
-                }
+                pickupClick(bc);
                 break;
             case SETUP_PIECE_SELECTED:
+                placementClick(bc);
                 break;
             case MOVE_NOT_ORIGIN_SELECTED:
+                originClick(bc);
                 break;
             case MOVE_ORIGIN_SELECTED:
+                destClick(bc);
                 break;
             default:
-                break;
+                throw (new IllegalStateException(this.getState().toString() + " is not a valid state."));
         }
     }
+
     @Override
     public void changed(ObservableValue<? extends Boolean> obs, Boolean old, Boolean newVal) {
         System.out.println("new move reported: " + StrategoUI.getCoords());
+        boardClick(StrategoUI.getCoords());
     }
 }

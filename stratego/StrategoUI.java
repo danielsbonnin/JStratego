@@ -62,9 +62,6 @@ public class StrategoUI {
                 // The clicked square's coordinates
                 BoardCoords bc = new BoardCoords(GridPane.getRowIndex(sq), GridPane.getColumnIndex(sq));
 
-                // flip the truth value of newClick to notify change listeners
-                StrategoUI.newClick.setValue(!StrategoUI.newClick.getValue());
-
                 // set bc
                 StrategoUI.setCoords(bc);
 

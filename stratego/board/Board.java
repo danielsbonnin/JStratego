@@ -99,7 +99,7 @@ public class Board {
      */
     public boolean validPlacement(BoardCoords bc) {
         Square placementSq = getSquare(bc.r, bc.c);
-        return (bc.r <= this.placementRowStIdx && placementSq.isEmpty());
+        return (bc.r >= this.placementRowStIdx && placementSq.isEmpty());
     }
 
     /**
@@ -109,8 +109,10 @@ public class Board {
      */
     public boolean tryPlacePiece(BoardCoords bc, PieceType pt) {
         if (!validPlacement(bc)) return false;
+        Piece toPlace = PIECETYPE_TO_PIECECLASS.get(pt);
+        toPlace.setP1(true);
         Square placeSq = getSquare(bc.r, bc.c);
-        placeSq.setPiece(PIECETYPE_TO_PIECECLASS.get(pt));
+        placeSq.setPiece(toPlace);
         return true;
     }
 
@@ -147,29 +149,40 @@ public class Board {
     }
 
     /**
-     * Move boolean.
+     * is valid Move
      *
-     * @param origin the start coordinates
-     * @param dest   the destination coordinates
+     * @pre assumes player 1
+     * @param move the proposed move
      * @return boolean valid move
      */
-    public boolean move(BoardCoords origin, BoardCoords dest) {
-        Square st = getSquare(origin.r, origin.c);
-        Piece stPiece = st.getPiece();
-        Square end = getSquare(dest.r, dest.c);
-
-        // unhighlight possible move squares
-        hidePossibleMoves(origin);
+    private boolean isValidMove(Move move) {
+        Square end = getSquare(move.getDestination().r, move.getDestination().c);
 
         // the set of possible moves starting at origin
-        List<Square> moves = getMoves(origin.r, origin.c);
+        List<Square> moves = getMoves(move.getOrigin());
 
-        // if moves contains end
-        boolean legalMove = moves.contains(end);
+        // the list of valid moves contains the proposed destination
+        return(moves.contains(end));
+    }
 
-        if (!legalMove) return false;
+    /**
+     * validate and execute a move
+     * @param move proposed move
+     * @param isP1 whether move by player 1
+     * @return
+     */
+    public boolean move(Move move, boolean isP1) {
+        if (isP1) {  // player 2 moves assumed valid
+            if (!isValidMove(move)) return false;  // p1 move is not valid
 
-        // move is valid
+            // unhighlight possible move squares
+            hidePossibleMoves(move.getOrigin());
+        }
+
+        Square stSq = getSquare(move.getOrigin().r, move.getOrigin().c);
+        Piece stPiece = stSq.getPiece();
+        Square end = getSquare(move.getDestination().r, move.getDestination().c);
+
         if (!end.isEmpty()) {  // attack move
             PieceType eType = end.getPiece().getPt();
 
@@ -185,7 +198,7 @@ public class Board {
             end.setPiece(stPiece);
         }
         // remove piece from start square.
-        st.remove();
+        stSq.remove();
 
         return true;
     }
@@ -193,18 +206,19 @@ public class Board {
     /**
      * Gets moves.
      *
-     * @param r the r
-     * @param c the c
+     * @param origin coords at proposed move origin
      * @return the moves
      */
-    public List<Square> getMoves(int r, int c) {
-        Square sq = board.get(r).get(c);
+    public List<Square> getMoves(BoardCoords origin) {
+        int r = origin.r;
+        int c = origin.c;
+        Square sq = getSquare(r, c);
         ArrayList<Square> poss = new ArrayList<Square>();
         if (sq.isEmpty()) return poss;
         Piece stPiece = sq.getPiece();
         int n = stPiece.getRange();
         for (int i = r - 1; i >= 0 && (r-i <= n); i--) {
-            Square cur = board.get(i).get(c);
+            Square cur = getSquare(i, c);
 
             if (cur.getState() == WATER) break;
 
@@ -221,7 +235,7 @@ public class Board {
         }
 
         for (int i = r + 1; i < this.height && (i - r <= n); i++) {
-            Square cur = board.get(i).get(c);
+            Square cur = getSquare(i, c);
 
             if (cur.getState() == WATER) break;
 
@@ -238,7 +252,7 @@ public class Board {
         }
 
         for (int i = c - 1; i >= 0 && (c-i <= n); i--) {
-            Square cur = board.get(r).get(i);
+            Square cur = getSquare(r, i);
 
             if (cur.getState() == WATER) break;
 
@@ -255,7 +269,7 @@ public class Board {
         }
 
         for (int i = c + 1; i < this.width && (i-c <= n); i++) {
-            Square cur = board.get(r).get(i);
+            Square cur = getSquare(r, i);
 
             if (cur.getState() == WATER) break;
 
@@ -277,7 +291,7 @@ public class Board {
      * Highlight squares of possible moves
      */
     public void showPossibleMoves(BoardCoords origin) {
-        List<Square> poss = getMoves(origin.r, origin.c);
+        List<Square> poss = getMoves(origin);
         for (Square m : poss) {
             m.highlight();
         }
@@ -287,7 +301,7 @@ public class Board {
      * unHighlight squares of possible moves
      */
     public void hidePossibleMoves(BoardCoords origin) {
-        List<Square> poss = getMoves(origin.r, origin.c);
+        List<Square> poss = getMoves(origin);
         for (Square m : poss) {
             m.unHighlight();
         }
