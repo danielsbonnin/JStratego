@@ -1,7 +1,8 @@
 package stratego.board;
 
-import stratego.*;
+import stratego.game.Move;
 import stratego.pieces.Piece;
+import stratego.pieces.PieceType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -173,10 +174,11 @@ public class Board {
      */
     public boolean move(Move move, boolean isP1) {
         if (isP1) {  // player 2 moves assumed valid
-            if (!isValidMove(move)) return false;  // p1 move is not valid
 
             // unhighlight possible move squares
             hidePossibleMoves(move.getOrigin());
+            
+            if (!isValidMove(move))  return false;  // p1 move is not valid
         }
 
         Square stSq = getSquare(move.getOrigin().r, move.getOrigin().c);
@@ -204,7 +206,7 @@ public class Board {
     }
 
     /**
-     * Gets moves.
+     * Get possible moves from origin coordinates.
      *
      * @param origin coords at proposed move origin
      * @return the moves
@@ -289,6 +291,7 @@ public class Board {
 
     /**
      * Highlight squares of possible moves
+     * @param origin starting square
      */
     public void showPossibleMoves(BoardCoords origin) {
         List<Square> poss = getMoves(origin);
@@ -299,6 +302,7 @@ public class Board {
 
     /**
      * unHighlight squares of possible moves
+     * @param origin starting square coordinates of highlighted poss moves
      */
     public void hidePossibleMoves(BoardCoords origin) {
         List<Square> poss = getMoves(origin);
@@ -333,7 +337,7 @@ public class Board {
         selected.setState(selected.getLast());
     }
 
-    public BoardData toBoardState() {
+    public BoardData toBoardData() {
         BoardData curState = new BoardData(this.height, this.width);
         for (int i = 0; i < this.height; i++) {
             for (int j = 0; j < this.width; j++) {

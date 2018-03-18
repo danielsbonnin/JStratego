@@ -2,8 +2,7 @@ package stratego.board;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import stratego.PieceType;
-import stratego.PlayerPiece;
+import stratego.pieces.PieceType;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -94,6 +93,24 @@ public class BoardData {
         Type collectionType = new TypeToken< List< List<PieceType> > >(){}.getType();
         List< List<PieceType>> newBoard = gson.fromJson(newState, collectionType);
         setAll(newBoard);
+    }
+
+    /**
+     * Reverse the board pieces to represent opponent's view
+     */
+    public void reverse() {
+        for (int i = 0; i < (getHeight() / 2); i++)
+            for (int j = 0; j < (getWidth()/2); j++) {
+                BoardCoords top = new BoardCoords(i, j);
+                BoardCoords bottom = new BoardCoords(getHeight() - i, getWidth()-j);
+                PlayerPiece newTop = get(bottom);
+                PlayerPiece newBottom = get(top);
+                newBottom.setIsP1(!newBottom.getIsP1());
+                newTop.setIsP1(!newTop.getIsP1());
+                set(top, newTop);
+                set(bottom, newBottom);
+
+            }
     }
 
     /**

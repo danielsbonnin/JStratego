@@ -1,12 +1,7 @@
 package stratego;
 
 import javafx.application.Application;
-import javafx.beans.InvalidationListener;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableBooleanValue;
-import javafx.beans.value.ObservableValue;
+import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Cursor;
 import javafx.scene.Parent;
@@ -14,6 +9,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
+import stratego.game.Game;
+import stratego.ui.StrategoUI;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +32,12 @@ public class Stratego extends Application {
     public static void main(String[] args) {
         launch(args);
     }
+
+    @FXML
+    public void clientClicked() {
+        System.out.println("client clicked");
+    }
+
     @Override
     public void start(Stage primaryStage) throws Exception{
 
@@ -73,6 +76,8 @@ public class Stratego extends Application {
         pieceButtons.add((Button)scene.lookup("#COLONEL"));
         pieceButtons.add((Button)scene.lookup("#GENERAL"));
         pieceButtons.add((Button)scene.lookup("#MARSHALL"));
+
+        boolean isServer = true;
 
         // instantiate Game object
         Game game = new Game(gb, pieceButtons, scene);

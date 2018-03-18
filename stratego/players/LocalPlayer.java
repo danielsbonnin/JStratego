@@ -1,12 +1,9 @@
 package stratego.players;
 
-import stratego.Game;
-import stratego.PieceInventory;
-import stratego.PieceType;
+import stratego.game.Game;
+import stratego.pieces.PieceType;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;

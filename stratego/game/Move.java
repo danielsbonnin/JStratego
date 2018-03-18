@@ -1,4 +1,4 @@
-package stratego;
+package stratego.game;
 
 import com.google.gson.Gson;
 import stratego.board.BoardCoords;
@@ -34,6 +34,7 @@ public class Move {
     public void setDestination(BoardCoords destination) {
         this.destination = destination;
     }
+
     public String toJson() {
         Gson gson = new Gson();
         return gson.toJson(this);

@@ -1,4 +1,4 @@
-package stratego;
+package stratego.ui;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.value.ChangeListener;

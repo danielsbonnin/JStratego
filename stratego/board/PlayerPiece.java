@@ -1,6 +1,7 @@
-package stratego;
+package stratego.board;
 
 import stratego.pieces.Piece;
+import stratego.pieces.PieceType;
 
 /**
  * Stratego PieceType and whether owner is LocalPlayer 1

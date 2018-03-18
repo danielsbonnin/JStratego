@@ -1,4 +1,4 @@
-package stratego;
+package stratego.game;
 
 /**
  * The enum Game state.

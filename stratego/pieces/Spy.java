@@ -1,7 +1,6 @@
 package stratego.pieces;
 
-import stratego.PieceType;
-import static stratego.PieceType.*;
+import static stratego.pieces.PieceType.*;
 
 import java.util.HashSet;
 

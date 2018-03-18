@@ -1,4 +1,6 @@
-package stratego;
+package stratego.players;
+
+import stratego.pieces.PieceType;
 
 import java.util.EnumMap;
 import java.util.List;

@@ -1,15 +1,6 @@
 package stratego.pieces;
 
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.text.TextAlignment;
-import stratego.PieceType;
-
-import java.util.EnumMap;
 import java.util.HashSet;
-import java.util.Map;
-
-import static javafx.scene.text.TextAlignment.CENTER;
 
 /**
  * The type Piece.

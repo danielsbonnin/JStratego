@@ -6,7 +6,7 @@ import stratego.pieces.*;
 
 import java.util.*;
 
-import static stratego.PieceType.*;
+import static stratego.pieces.PieceType.*;
 
 /**
  * useful constants for use with stratego classes

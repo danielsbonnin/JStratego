@@ -1,4 +1,4 @@
-package stratego;
+package stratego.game;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -7,6 +7,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import stratego.pieces.PieceType;
+import stratego.ui.StrategoUI;
 import stratego.board.*;
 import stratego.pieces.Piece;
 import javafx.scene.Cursor;
@@ -17,8 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static stratego.Constants.*;
-import static stratego.GameState.*;
-import static stratego.board.SquareState.*;
+import static stratego.game.GameState.*;
 
 /**
  * A Game of Stratego
@@ -108,27 +109,32 @@ public class Game implements ChangeListener<Boolean>{
         // initialize boardPane with Square objects from this.board
         setupGridPane();
 
+        // initialize piece buttons according to player's inventory
         setupPieceButtons();
 
-        // initialize piece buttons according to player's inventory
-        updatePieceButtons();
-
-        StrategoUI.newClick.addListener(this);  // notify Game when new Move is available from UI
+        // notify Game when new Move is available from UI
+        StrategoUI.newClick.addListener(this);
 
         // GUI button to indicate finished setup
         Button finishedButton = (Button) this.scene.lookup("#btn_setup_finished");
 
         // finished button click handler
         finishedButton.setOnMouseClicked( e-> {
-            System.out.println("finishedButton clicked");
+            // reference the ui elements to remove
             ButtonBar pieceButtonBar = (ButtonBar) this.scene.lookup("#pieceButtonBar");
             VBox finishedButtonVBox = (VBox) this.scene.lookup("#btn_finished_vbox");
 
+            // the parent container of the ui
             VBox vbox = (VBox) this.scene.lookup("#vbox");
+
+            // remove piece buttons and finished button
             vbox.getChildren().removeAll(pieceButtonBar, finishedButtonVBox);
 
+            // initiate game play mode
             setState(MOVE_NOT_ORIGIN_SELECTED);
         });
+
+        // initiate setup mode
         setState(SETUP_NOT_PIECE_SELECTED);
     }
 
@@ -147,9 +153,7 @@ public class Game implements ChangeListener<Boolean>{
      * piece placed during setup
      */
     private void placementClick(BoardCoords bc) {
-        System.out.println("placement click at: " + bc.toString() + " pieceInHand: " + this.pieceInHand.toString());
         if (!this.board.tryPlacePiece(bc, this.pieceInHand)) {
-            System.out.println("invalid placement");
         }
         this.scene.getRoot().setCursor(Cursor.HAND);
         setState(SETUP_NOT_PIECE_SELECTED);
@@ -164,7 +168,6 @@ public class Game implements ChangeListener<Boolean>{
             this.board.showPossibleMoves(bc);
             setState(MOVE_ORIGIN_SELECTED);
         } else {
-            System.out.println("invalid origin");
             setState(MOVE_NOT_ORIGIN_SELECTED);
         }
     }
@@ -277,7 +280,7 @@ public class Game implements ChangeListener<Boolean>{
      *
      * @param state the state
      */
-    void setState(GameState state) {
+    public void setState(GameState state) {
         System.out.println("new game state: " + state.toString());
         this.state = state; }
 
@@ -286,7 +289,12 @@ public class Game implements ChangeListener<Boolean>{
      *
      * @return GameState state
      */
-    GameState getState() { return this.state; }
+    public GameState getState() { return this.state; }
+
+    /**
+     * Gets board
+     */
+    public Board getBoard() { return this.board; }
 
     /**
      * Process coordinates of a gameBoard click

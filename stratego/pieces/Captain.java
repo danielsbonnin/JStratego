@@ -1,9 +1,7 @@
 package stratego.pieces;
 
-import stratego.PieceType;
-
 import java.util.HashSet;
-import static stratego.PieceType.*;
+import static stratego.pieces.PieceType.*;
 
 /**
  * The type Captain.
