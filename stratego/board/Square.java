@@ -1,12 +1,11 @@
-package stratego;
+package stratego.board;
 
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import stratego.pieces.Piece;
 
 import static stratego.Constants.SQUARE_STYLES;
-import static stratego.SquareState.EMPTY_LAND;
-import static stratego.SquareState.POSSIBLE_MOVE;
+import static stratego.board.SquareState.*;
 
 /**
  * The type Square.
@@ -14,7 +13,6 @@ import static stratego.SquareState.POSSIBLE_MOVE;
 public class Square extends Pane {
     private Piece piece = null;
     private boolean isEmpty = true;
-    private boolean isSelected;
     private SquareState state;
 
     /**
@@ -43,6 +41,7 @@ public class Square extends Pane {
         // TODO: use constant cell size to center labelText
         this.labelText.setLayoutX(12);
         this.labelText.setLayoutY(12);
+        this.labelText.setMouseTransparent(true);
     }
 
     /**
@@ -50,23 +49,23 @@ public class Square extends Pane {
      *
      * @return the last
      */
-    SquareState getLast() { return this.last; }
+    public SquareState getLast() { return this.last; }
 
     /**
      * Is empty boolean.
      *
      * @return the boolean
      */
-    boolean isEmpty() { return this.isEmpty; }
+    public boolean isEmpty() { return this.isEmpty; }
 
-    boolean getIsHighlighted() { return isHighlighted; }
-    void highlight() {
+    public boolean getIsHighlighted() { return isHighlighted; }
+    public void highlight() {
         if (!this.isHighlighted)
             this.isHighlighted = true;
             this.last = this.state;
             setState(POSSIBLE_MOVE);
     }
-    void unHighlight() {
+    public void unHighlight() {
         if (this.isHighlighted) {
             this.isHighlighted = false;
             this.setState(this.last);
@@ -77,11 +76,12 @@ public class Square extends Pane {
      *
      * @param p the p
      */
-    void setPiece(Piece p) {
+    public void setPiece(Piece p) {
         this.piece = p;
         p.reveal();
         this.isEmpty = false;
         this.labelText.setText(p.getLabelText());
+        setState(p.getP1() ? OCCUPIED_P1 : OCCUPIED_P2);
     }
 
     /**
@@ -89,7 +89,7 @@ public class Square extends Pane {
      *
      * @return the piece
      */
-    Piece remove() {
+    public Piece remove() {
         Piece p = this.piece;
         this.piece = null;
         this.isEmpty = true;
@@ -138,7 +138,7 @@ public class Square extends Pane {
      *
      * @return the piece
      */
-    Piece getPiece() {
+    public Piece getPiece() {
         return this.piece;
     }
 }

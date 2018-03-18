@@ -1,19 +1,24 @@
 package stratego;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import stratego.board.*;
 import stratego.pieces.Piece;
 import javafx.scene.Cursor;
+import stratego.players.LocalPlayer;
+import stratego.players.RemotePlayer;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static stratego.Constants.*;
 import static stratego.GameState.*;
-import static stratego.SquareState.*;
+import static stratego.board.SquareState.*;
 
 /**
  * A Game of Stratego
@@ -22,11 +27,12 @@ import static stratego.SquareState.*;
  * <p>Coordinates the Setup, GamePlay phases of a game.</p>
  *
  * @author Daniel Bonnin
+ * //TODO separate game logic from ui
  */
-public class Game {
+public class Game implements ChangeListener<Boolean>{
     /**
      * A 2d Array of Square objects
-     * @see stratego.Square Square
+     * @see Square Square
      * */
     private Board board;
 
@@ -43,17 +49,23 @@ public class Game {
     private List<Button> pieceButtons;
 
     /**
-     * @see stratego.Player
+     * @see LocalPlayer
      */
-    private Player p1;
-    private Player p2;
+    private LocalPlayer p1;
+    private RemotePlayer p2;
     private boolean isp1Turn;
 
     /**
-     * piece currently "held" by player while setting up board
+     * PieceType currently "held" by player
      * @see stratego.pieces.Piece
      */
-    private Piece pieceInHand;
+    private PieceType pieceInHand;
+
+
+    /**
+     * coordinates of picked-up piece
+     */
+    private BoardCoords pickedUpPiece;
 
     /**
      * @see GameState
@@ -67,7 +79,6 @@ public class Game {
 
     /**
      * Represents all possible moves from the selected board square
-     * @see Board#getMoves(int, int)
      */
     private List<Square> curPossMoves;
 
@@ -84,30 +95,94 @@ public class Game {
         this.board = new Board(DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT, true);
         this.boardPane = gp;
         this.pieceButtons = new ArrayList<Button>(pieceButtons);
-        this.p1 = new Player(DEFAULT_PIECES);
-        this.p2 = new Player(DEFAULT_PIECES);
+        this.p1 = new LocalPlayer(DEFAULT_PIECES, true, this);
+
+        this.p2 = new RemotePlayer(this);
         this.state = GameState.SETUP_NOT_PIECE_SELECTED;
         this.scene = scene;
         this.selected = new BoardCoords(0, 0);
 
-        this.curPossMoves = new ArrayList<Square>();
+        //this.curPossMoves = new ArrayList<Square>();
+        this.isp1Turn = true;
 
         // initialize boardPane with Square objects from this.board
         setupGridPane();
 
+        setupPieceButtons();
+
         // initialize piece buttons according to player's inventory
         updatePieceButtons();
 
-        // player sets pieces on the board
-        piecePlacementLoop();
+        StrategoUI.newClick.addListener(this);  // notify Game when new Move is available from UI
 
-        // game play
-        //gameLoop();
+        // GUI button to indicate finished setup
+        Button finishedButton = (Button) this.scene.lookup("#btn_setup_finished");
+
+        // finished button click handler
+        finishedButton.setOnMouseClicked( e-> {
+            System.out.println("finishedButton clicked");
+            ButtonBar pieceButtonBar = (ButtonBar) this.scene.lookup("#pieceButtonBar");
+            VBox finishedButtonVBox = (VBox) this.scene.lookup("#btn_finished_vbox");
+
+            VBox vbox = (VBox) this.scene.lookup("#vbox");
+            vbox.getChildren().removeAll(pieceButtonBar, finishedButtonVBox);
+
+            setState(MOVE_NOT_ORIGIN_SELECTED);
+        });
+        setState(SETUP_NOT_PIECE_SELECTED);
+    }
+
+    /**
+     * piece picked up during setup
+     */
+    private void pickupClick(BoardCoords bc) {
+        if (this.board.validPickup(bc)) {
+            this.pieceInHand= this.board.pickupPiece(bc);
+            setState(SETUP_PIECE_SELECTED);
+            this.scene.getRoot().setCursor(Cursor.CROSSHAIR);
+        }
+    }
+
+    /**
+     * piece placed during setup
+     */
+    private void placementClick(BoardCoords bc) {
+        System.out.println("placement click at: " + bc.toString() + " pieceInHand: " + this.pieceInHand.toString());
+        if (!this.board.tryPlacePiece(bc, this.pieceInHand)) {
+            System.out.println("invalid placement");
+        }
+        this.scene.getRoot().setCursor(Cursor.HAND);
+        setState(SETUP_NOT_PIECE_SELECTED);
+    }
+
+    /**
+     * origin click during game
+     */
+    private void originClick(BoardCoords bc) {
+        if (this.board.validOrigin(bc)) {
+            this.pickedUpPiece = bc;
+            this.board.showPossibleMoves(bc);
+            setState(MOVE_ORIGIN_SELECTED);
+        } else {
+            System.out.println("invalid origin");
+            setState(MOVE_NOT_ORIGIN_SELECTED);
+        }
+    }
+
+    /**
+     * piece destination click during game
+     */
+    private void destClick(BoardCoords dest) {
+        Move proposed = new Move(this.pickedUpPiece, dest, false, true);
+        if (!this.board.move(proposed, this.isp1Turn)) {
+            System.out.println("Invalid move.");
+        }
+        setState(MOVE_NOT_ORIGIN_SELECTED);
     }
 
     /**
      * Set style of piece buttons according to quantity in p1's inventory
-     * @see Player#inventory
+     * @see LocalPlayer#inventory
      */
     private void updatePieceButtons() {
         // loop pieceButtons
@@ -116,7 +191,7 @@ public class Game {
             PieceType pt = PIECETYPESTRING_TO_PIECETYPE.get(b.getId());
 
             // Count of this button's PieceType in inventory
-            int count = this.p1.inventory.getCount(pt);
+            int count = this.p1.getInventory().getCount(pt);
 
             if (count > 0) {        // at least 1 piece of this type
                 // TODO: make constants of these hardcoded styles
@@ -136,7 +211,7 @@ public class Game {
     public void piecePlacementP2() {
         //
         try {
-            assert (this.board.width == 10 && this.board.height == 10);
+            assert (this.board.getWidth() == 10 && this.board.getHeight() == 10);
         } catch (AssertionError e) {
             System.out.println("Board dimensions should be 10X10 for piecePlacementP2 stub method.");
         }
@@ -144,14 +219,15 @@ public class Game {
             int row = i / 10;
             int col = i % 10;
             Square sq = this.board.getSquare(row, col);
-            sq.setPiece(PIECETYPE_TO_PIECECLASS.get(DEFAULT_PIECES.get(i)));
-            sq.setState(OCCUPIED_P2);
+            Piece p = PIECETYPE_TO_PIECECLASS.get(DEFAULT_PIECES.get(i));
+            p.setP1(false);
+            sq.setPiece(p);
         }
     }
     /**
      * Setup UI for placing pieces on the board
      */
-    public void piecePlacementLoop() {
+    private void setupPieceButtons() {
         updatePieceButtons();
 
         // setup test p2 pieces
@@ -159,38 +235,19 @@ public class Game {
         // GUI button to indicate finished setup
         Button finishedButton = (Button) this.scene.lookup("#btn_setup_finished");
 
-        // finished button click handler
-        finishedButton.setOnMouseClicked( e-> {
-            System.out.println("finishedButton clicked");
-            ButtonBar pieceButtonBar = (ButtonBar) this.scene.lookup("#pieceButtonBar");
-            VBox finishedButtonVBox = (VBox) this.scene.lookup("#btn_finished_vbox");
-
-            VBox vbox = (VBox) this.scene.lookup("#vbox");
-            vbox.getChildren().removeAll(pieceButtonBar, finishedButtonVBox);
-
-            // Start game loop
-            gameLoop();
-        });
-
-        // restrict board squares valid for placement
-        int placementRowStIdx = this.board.height - ((this.board.height / 2) - 1);
-
         // initialize piece buttons
         for (Button b : this.pieceButtons) {
             // User clicked on a piece button
             b.setOnMouseClicked(e-> {
                 // Piece already selected. Put back old piece
                 if (this.state == SETUP_PIECE_SELECTED) {
-                    this.p1.inventory.replace(this.pieceInHand.getPt());
+                    this.p1.getInventory().replace(this.pieceInHand);
                     this.setState(SETUP_NOT_PIECE_SELECTED);
                     updatePieceButtons();
                 }
-
-                // instantiate new Piece of selected type
-                this.pieceInHand = PIECETYPE_TO_PIECECLASS.get(PIECETYPESTRING_TO_PIECETYPE.get(b.getId()));
-
+                this.pieceInHand = PIECETYPESTRING_TO_PIECETYPE.get(b.getId());
                 // decrement inventory count for this type
-                if (this.p1.inventory.remove(PIECETYPESTRING_TO_PIECETYPE.get(b.getId())) == 0) {
+                if (this.p1.getInventory().remove(this.pieceInHand) == 0) {
                     // last piece of this type. disable button
                     // TODO: make constant
                     b.setStyle("-fx-background-color: red;");
@@ -202,111 +259,14 @@ public class Game {
                 setState(SETUP_PIECE_SELECTED);
             });
         }
-
-        // initialize square click handlers for placement
-        for (int i = placementRowStIdx; i < this.board.height; i++) {
-            for (int j = 0; j < this.board.width; j++) {
-                Square sq = this.board.getSquare(i, j);
-
-                // click handler for grid squares
-                sq.setOnMouseClicked(e -> {
-                    // no piece selected
-                    if (this.state == SETUP_NOT_PIECE_SELECTED) {
-                        // if piece here, pick it up
-                        if (!sq.isEmpty() && !(sq.getState() == WATER)) {
-                            this.pieceInHand = sq.remove();
-                            setState(SETUP_PIECE_SELECTED);
-                            this.scene.getRoot().setCursor(Cursor.CROSSHAIR);
-                        }
-                        return;
-                    }
-                    // piece is currently selected
-                    else if (sq.getState() == WATER) {  // WATER square clicked
-                        return;                         // do nothing
-                    } else if (!sq.isEmpty()) {  // square already contains a piece
-                        // put back piece in hand. pick up piece on board
-                        this.p1.inventory.replace(sq.getPiece().getPt());
-                        sq.remove();
-                        // Reset button in case replaced piece was last of its type
-                        updatePieceButtons();
-                    } else {
-                        setState(SETUP_NOT_PIECE_SELECTED);
-                        this.scene.getRoot().setCursor(Cursor.HAND);
-                    }
-                    sq.setPiece(this.pieceInHand);
-                    sq.setState(OCCUPIED_P1);
-                });
-            }
-        }
-    }
-
-    /**
-     * Display possible moves of Piece at currently selected Square
-     */
-    public void showPossMoves() {
-        for (Square p : this.curPossMoves) {
-            p.setState(POSSIBLE_MOVE);
-        }
-    }
-
-    /**
-     * Game play
-     */
-    public void gameLoop() throws IllegalStateException{
-        this.setState(MOVE_NOT_ORIGIN_SELECTED);
-        this.isp1Turn = true;
-        // remove square click handlers
-        for (int i = 0; i < this.board.height; i++) {
-            for (int j = 0; j < this.board.width; j++) {
-               Square sq = this.board.getSquare(i, j);
-                sq.setOnMouseClicked(null);
-            }
-        }
-
-        // Set click handler for boardPane
-        // *Square instances do not know their board coordinates
-        //  so we calculate the grid relative to board bounds
-        this.boardPane.setOnMousePressed(e->{
-            // calculate board coordinates
-            int row = ((int) (e.getY())) / 50;
-            int col = ((int) (e.getX())) / 50;
-            BoardCoords bc = new BoardCoords(row, col);
-            Square selectedSquare = this.board.getSquare(row, col);
-            if (this.state == MOVE_NOT_ORIGIN_SELECTED) {
-                /** Get moves for piece at this Square
-                 * @see Board#getMoves(int, int)
-                 */
-
-                // coordinates at the clicked square
-                this.selected = new BoardCoords(row, col);
-
-                // make sure this is the current player's piece
-                if (
-                        (isp1Turn && selectedSquare.getState() != OCCUPIED_P1)
-                    ||  (!isp1Turn && selectedSquare.getState() != OCCUPIED_P2)
-                    ) return;
-
-                // update UI to reflect curPossMoves
-                this.board.showPossibleMoves(this.selected);
-
-                setState(MOVE_ORIGIN_SELECTED);
-            } else if (this.state == MOVE_ORIGIN_SELECTED) {  // legal move
-                if (this.board.move(selected, bc)) {
-                    setState(MOVE_NOT_ORIGIN_SELECTED);
-                    isp1Turn = !isp1Turn;  // change player
-                }
-            } else {
-                throw (new IllegalStateException("Invalid game state for game loop"));
-            }
-        });
     }
 
     /**
      * Sets grid pane.
      */
     public void setupGridPane() {
-        for (int i = 0; i < this.board.height; i++)
-            for (int j = 0; j < this.board.width; j++) {
+        for (int i = 0; i < this.board.getHeight(); i++)
+            for (int j = 0; j < this.board.getWidth(); j++) {
                 Square sqTarget = this.board.getSquare(i, j);
                 boardPane.add(sqTarget, j, i);
             }
@@ -317,7 +277,9 @@ public class Game {
      *
      * @param state the state
      */
-    void setState(GameState state) { this.state = state; }
+    void setState(GameState state) {
+        System.out.println("new game state: " + state.toString());
+        this.state = state; }
 
     /**
      * Gets state.
@@ -325,4 +287,33 @@ public class Game {
      * @return GameState state
      */
     GameState getState() { return this.state; }
+
+    /**
+     * Process coordinates of a gameBoard click
+     * @param bc grid coordinates of click
+     */
+    private void boardClick(BoardCoords bc) {
+        switch(this.state) {
+            case SETUP_NOT_PIECE_SELECTED:
+                pickupClick(bc);
+                break;
+            case SETUP_PIECE_SELECTED:
+                placementClick(bc);
+                break;
+            case MOVE_NOT_ORIGIN_SELECTED:
+                originClick(bc);
+                break;
+            case MOVE_ORIGIN_SELECTED:
+                destClick(bc);
+                break;
+            default:
+                throw (new IllegalStateException(this.getState().toString() + " is not a valid state."));
+        }
+    }
+
+    @Override
+    public void changed(ObservableValue<? extends Boolean> obs, Boolean old, Boolean newVal) {
+        System.out.println("new move reported: " + StrategoUI.getCoords());
+        boardClick(StrategoUI.getCoords());
+    }
 }

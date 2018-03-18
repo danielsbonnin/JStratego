@@ -1,5 +1,7 @@
 package stratego;
 
+import stratego.board.BoardCoords;
+import stratego.board.SquareState;
 import stratego.pieces.*;
 
 import java.util.*;
@@ -129,6 +131,29 @@ public class Constants {
         pieceStrings.put("GENERAL", GENERAL);
         pieceStrings.put("MARSHALL", MARSHALL);
         PIECETYPESTRING_TO_PIECETYPE = Collections.unmodifiableMap(pieceStrings);
+    }
+
+    /**
+     * Map of String to PieceType
+     *
+     * @usage String ptString = PIECETYPE_TO_PIECETYPESTRING.get(MINER);
+     */
+    public static final Map<PieceType, String> PIECETYPE_TO_PIECETYPESTRING;
+    static {
+        Map<PieceType, String> pieceTypes = new HashMap<PieceType, String>();
+        pieceTypes.put(FLAG, "FLAG");
+        pieceTypes.put(BOMB, "BOMB");
+        pieceTypes.put(SPY, "SPY");
+        pieceTypes.put(SCOUT, "SCOUT");
+        pieceTypes.put(MINER, "MINER");
+        pieceTypes.put(SERGEANT, "SERGEANT");
+        pieceTypes.put(LIEUTENANT, "LIEUTENANT");
+        pieceTypes.put(CAPTAIN, "CAPTAIN");
+        pieceTypes.put(MAJOR, "MAJOR");
+        pieceTypes.put(COLONEL, "COLONEL");
+        pieceTypes.put(GENERAL, "GENERAL");
+        pieceTypes.put(MARSHALL, "MARSHALL");
+        PIECETYPE_TO_PIECETYPESTRING = Collections.unmodifiableMap(pieceTypes);
     }
 
     /**

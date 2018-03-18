@@ -19,7 +19,7 @@ public abstract class Piece {
     private int range;
     private PieceType pt;
     /**
-     * The Kills.
+     * PieceTypes killed by this piece's PieceType
      */
     protected HashSet<PieceType> kills;
     private boolean revealed = false;
@@ -36,6 +36,7 @@ public abstract class Piece {
     public Piece(int range, PieceType pt, String labelText) {
         this.range = range;
         this.pt = pt;
+        this.p1 = true;
         this.pLabel = labelText;
         setKills();
     }
@@ -86,6 +87,15 @@ public abstract class Piece {
     /**
      * Sets kills.
      */
-// Each piece has unique set of kills
     abstract void setKills();
+
+    /**
+     * @return whether is player 1
+     */
+    public boolean getP1() { return this.p1; }
+
+    /**
+     * set whether is player 1
+     */
+    public void setP1(boolean isP1) { this.p1 = isP1; }
 }

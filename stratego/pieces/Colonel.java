@@ -5,7 +5,13 @@ import static stratego.PieceType.*;
 
 import java.util.HashSet;
 
+/**
+ * The type Colonel.
+ */
 public class Colonel extends Piece{
+    /**
+     * Instantiates a new Colonel.
+     */
     public Colonel() {
         super(1, COLONEL, "3");
         setKills();

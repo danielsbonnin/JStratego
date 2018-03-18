@@ -1,4 +1,4 @@
-package stratego;
+package stratego.board;
 
 /**
  * The enum Square state.

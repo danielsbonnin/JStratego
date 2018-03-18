@@ -1,6 +1,12 @@
 package stratego;
 
 import javafx.application.Application;
+import javafx.beans.InvalidationListener;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableBooleanValue;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Cursor;
 import javafx.scene.Parent;
@@ -31,8 +37,8 @@ public class Stratego extends Application {
     }
     @Override
     public void start(Stage primaryStage) throws Exception{
-        Parent root = FXMLLoader.load(getClass().getResource("stratego.fxml"));
 
+        Parent root = FXMLLoader.load(getClass().getResource("stratego.fxml"));
         // Setup window
         primaryStage.setTitle("JStratego");
 
@@ -70,5 +76,9 @@ public class Stratego extends Application {
 
         // instantiate Game object
         Game game = new Game(gb, pieceButtons, scene);
+
+        StrategoUI ui = new StrategoUI(gb, pieceButtons, 10, 10);
+
+
     }
 }

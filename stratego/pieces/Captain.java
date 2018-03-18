@@ -5,7 +5,13 @@ import stratego.PieceType;
 import java.util.HashSet;
 import static stratego.PieceType.*;
 
+/**
+ * The type Captain.
+ */
 public class Captain extends Piece{
+    /**
+     * Instantiates a new Captain.
+     */
     public Captain() {
         super(1, CAPTAIN, "5");
         setKills();
