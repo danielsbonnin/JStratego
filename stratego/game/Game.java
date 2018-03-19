@@ -130,6 +130,8 @@ public class Game implements ChangeListener<Boolean>{
             // remove piece buttons and finished button
             vbox.getChildren().removeAll(pieceButtonBar, finishedButtonVBox);
 
+            // send a message to remote player
+
             // initiate game play mode
             setState(MOVE_NOT_ORIGIN_SELECTED);
         });

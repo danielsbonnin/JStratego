@@ -16,7 +16,7 @@ import static stratego.messages.MsgType.MOVE;
 /**
  * @author Daniel Bonnin
  */
-public class RemotePlayer implements IOpponent, Runnable{
+public class RemotePlayer implements IOpponent {
     Game game;
     String ipAddr;
     int gameWidth;
@@ -25,36 +25,11 @@ public class RemotePlayer implements IOpponent, Runnable{
 
     public RemotePlayer(Game game)  {
         this.game = game;
-        this.ipAddr = "localhost";
-        this.portno = 9031;
         this.gameWidth = this.game.getBoard().getWidth();
         this.gameHeight = this.game.getBoard().getHeight();
         //new Thread(this).start();
     }
 
-
-    public void run() {
-        System.out.println("connecting to opponent");
-        String serverAddress = "localhost";
-        while (true) {
-            try {
-                for (int i = 0; i < 5; i++) {
-                    try {Thread.sleep(1000);} catch(Exception e) {}
-                    Socket s = new Socket(serverAddress, 9031);
-                    BufferedReader input =
-                            new BufferedReader(new InputStreamReader(s.getInputStream()));
-                    System.out.println("On P2's computer: " + input.readLine());
-                }
-            } catch (IOException e) {
-                System.out.println("Failed to connect");
-                try {
-                    Thread.sleep(3000);
-                } catch (Exception exception) {
-                }
-                System.out.println("Trying Again");
-            }
-        }
-    }
     public String setup() {
         return "catdog";
     }
@@ -75,6 +50,7 @@ public class RemotePlayer implements IOpponent, Runnable{
     }
 
     public void trySend(Message m) {
+
 
     }
     public Move getNextMove(Move m) {

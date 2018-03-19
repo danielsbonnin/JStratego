@@ -14,7 +14,7 @@ import static stratego.Constants.DEFAULT_PIECES;
 /**
  * The type LocalPlayer.
  */
-public class LocalPlayer implements Runnable{
+public class LocalPlayer {
     /**
      * The Handle.
      */
@@ -51,30 +51,7 @@ public class LocalPlayer implements Runnable{
         //new Thread(this).start();
     }
 
-    private void connect() throws IOException {
-        ServerSocket listener = new ServerSocket(9031);
-        try {
-            while (true) {
-                Socket socket = listener.accept();
-                try {
-                    PrintWriter out =
-                            new PrintWriter(socket.getOutputStream(), true);
-                    out.println("You didn't say anything.");
-                } catch (Exception e) {
-                    socket.close();
-                }
-            }
-        }
-        finally {
-            listener.close();
-        }
-    }
-    /**
-     * Instantiate a socket server to receive opponent moves
-     */
-    public void run() {
-        try {connect();} catch (Exception exc) {};
-    }
+
     /**
      * Instantiates a new LocalPlayer.
      */

@@ -11,6 +11,11 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import stratego.game.Game;
+import stratego.messages.StrategoClient;
+import stratego.messages.StrategoServer;
+import stratego.players.IOpponent;
+import stratego.players.LocalPlayer;
+import stratego.players.RemotePlayer;
 import stratego.ui.StrategoUI;
 
 import java.util.ArrayList;
@@ -34,6 +39,10 @@ public class Stratego extends Application {
         launch(args);
     }
 
+    LocalPlayer p1;
+    RemotePlayer p2;
+    StrategoServer ss;
+    StrategoClient sc;
     @FXML
     public void clientClicked() {
         System.out.println("client clicked");
@@ -53,15 +62,18 @@ public class Stratego extends Application {
     }
 
     @FXML public void connectButtonClicked() {
-        if (this.serverRadio.isSelected())
-            System.out.println("Game started as server. Wait for connection");
+        if (this.serverRadio.isSelected()) {
+            this.connectButton.setDisable(true);
+            ss = new StrategoServer(Integer.parseInt(this.serverPortField.getText()));
+        }
         else
-            System.out.println("Game started as client. Attempt to connect.");
+            sc = new StrategoClient(this.serverAddrField.getText(), Integer.parseInt(this.serverPortField.getText()));
     }
 
     @FXML public void isServerToggleGroupToggled() {
         if (this.clientRadio.isSelected());
     }
+
     @FXML
     private TextArea statusText;
 
@@ -82,23 +94,14 @@ public class Stratego extends Application {
     void initialize() {
         this.statusText.setText("Setup Connection");
     }
+
     @Override
     public void start(Stage primaryStage) throws Exception{
 
         Parent root = FXMLLoader.load(getClass().getResource("stratego.fxml"));
         // Setup window
 
-
-
-
         primaryStage.setTitle("JStratego");
-
-        // TODO: make constants
-        /*primaryStage.setMinHeight(650);
-        primaryStage.setMinWidth(550);
-        primaryStage.setMaxHeight(650);
-        primaryStage.setMaxWidth(550);
-        */
         Scene scene = new Scene(root, 700, 650);
 
         // ui element representing the game board
@@ -126,15 +129,9 @@ public class Stratego extends Application {
         pieceButtons.add((Button)scene.lookup("#GENERAL"));
         pieceButtons.add((Button)scene.lookup("#MARSHALL"));
 
-        boolean isServer = true;
-
-
         // instantiate Game object
-        Game game = new Game(gb, pieceButtons, scene);
+        //Game game = new Game(gb, pieceButtons, scene);
 
         StrategoUI ui = new StrategoUI(gb, pieceButtons, 10, 10);
-
-
-
     }
 }
