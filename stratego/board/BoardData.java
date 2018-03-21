@@ -46,6 +46,10 @@ public class BoardData {
         this.state = new ArrayList<>(newBoardState);
     }
 
+    public BoardData(String jsonState) {
+        this(fromJson(jsonState));
+    }
+
     int getHeight() { return this.height; }
     int getWidth() { return this.width; }
     void setHeight(int height) { this.height = height; }
@@ -71,9 +75,9 @@ public class BoardData {
 
     /**
      * Sets all pieces on the board
-     * @param newState 2d List of PieceType
+     * @param newState 2d List of PlayerPiece
      */
-    public void setAll(List< List<PieceType>> newState) {
+    public void setAll(List< List<PlayerPiece>> newState) {
         // Ensure new board's dimensions match existing
         try {
             assert(newState.size() == this.height && newState.get(0).size() == this.width);
@@ -84,15 +88,16 @@ public class BoardData {
     }
 
     /**
-     * Parse board from json String and set
+     * Parse board state from json String
      * @see Gson
      * @param newState json formatted String
      */
-    public void fromJson(String newState) {
+    public static List< List<PlayerPiece> > fromJson(String newState) {
         Gson gson = new Gson();
         Type collectionType = new TypeToken< List< List<PieceType> > >(){}.getType();
-        List< List<PieceType>> newBoard = gson.fromJson(newState, collectionType);
-        setAll(newBoard);
+        List< List<PlayerPiece>> newBoard =
+                (gson.fromJson(newState, collectionType));
+        return newBoard;
     }
 
     /**
@@ -109,7 +114,6 @@ public class BoardData {
                 newTop.setIsP1(!newTop.getIsP1());
                 set(top, newTop);
                 set(bottom, newBottom);
-
             }
     }
 

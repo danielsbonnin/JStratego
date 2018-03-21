@@ -16,10 +16,4 @@ public class MoveMessage extends Message {
     public MoveMessage(MsgType type, String jsonMove) {
         super(type, jsonMove);
     }
-
-    Move getObj() {
-        Gson gson = new Gson();
-
-       return gson.fromJson(this.jsonObj, Move.class);
-    }
 }

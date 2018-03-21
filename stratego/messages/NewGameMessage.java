@@ -15,6 +15,6 @@ public class NewGameMessage extends Message {
 
     public GameSettings getObj() {
         Gson gson = new Gson();
-        return gson.fromJson(this.jsonObj, GameSettings.class);
+        return gson.fromJson(this.getJsonObj(), GameSettings.class);
     }
 }

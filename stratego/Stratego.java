@@ -10,9 +10,13 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
+import stratego.board.BoardCoords;
 import stratego.game.Game;
+import stratego.game.Move;
 import stratego.messages.StrategoClient;
 import stratego.messages.StrategoServer;
+import stratego.messages.Message;
+import stratego.messages.ToServerHandler;
 import stratego.players.IOpponent;
 import stratego.players.LocalPlayer;
 import stratego.players.RemotePlayer;
@@ -20,6 +24,8 @@ import stratego.ui.StrategoUI;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static stratego.messages.MsgType.MOVE;
 
 /**
  * Main application of JStratego.
@@ -64,10 +70,16 @@ public class Stratego extends Application {
     @FXML public void connectButtonClicked() {
         if (this.serverRadio.isSelected()) {
             this.connectButton.setDisable(true);
+            System.out.println("Server to start");
             ss = new StrategoServer(Integer.parseInt(this.serverPortField.getText()));
-        }
-        else
+        } else {
             sc = new StrategoClient(this.serverAddrField.getText(), Integer.parseInt(this.serverPortField.getText()));
+            sc.sendMessage(
+                    new Message(
+                            MOVE, new Move(
+                                    new BoardCoords(1, 1), new BoardCoords(2, 2), true, true)
+                    .toJson()));
+        }
     }
 
     @FXML public void isServerToggleGroupToggled() {
@@ -96,8 +108,7 @@ public class Stratego extends Application {
     }
 
     @Override
-    public void start(Stage primaryStage) throws Exception{
-
+    public void start(Stage primaryStage) throws Exception {
         Parent root = FXMLLoader.load(getClass().getResource("stratego.fxml"));
         // Setup window
 
