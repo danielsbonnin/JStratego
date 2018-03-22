@@ -19,6 +19,10 @@ public class Message {
         this.jsonObj = jsonObj;
     }
 
+    public static Message fromJson(String jsonMessage) {
+        Gson gson = new Gson();
+        return gson.fromJson(jsonMessage, Message.class);
+    }
     /**
      * The message to transmit
      * @return

@@ -1,54 +1,59 @@
 package stratego.messages;
 
-import stratego.board.BoardCoords;
-import stratego.game.Move;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-import static stratego.messages.MsgType.MOVE;
+import static stratego.messages.Constants.MS_BETWEEN_KEEPALIVES;
+import static stratego.messages.MsgType.KEEPALIVE;
 
 /**
  * @author Daniel Bonnin
  */
 public class ToServerHandler implements Runnable {
-    private String responseJson;
     private Message message;
     private String ipAddr;
     private int portno;
-    public ToServerHandler(Message message, String ipAddr, int portno) {
+    private StrategoClient sc;
+    private Message keepaliveMessage;
+    private static int keepaliveMS = MS_BETWEEN_KEEPALIVES;
+    public ToServerHandler(String ipAddr, int portno, StrategoClient sc) {
         this.message = message;
+        this.keepaliveMessage = new Message(KEEPALIVE, "[]");
         this.ipAddr = ipAddr;
         this.portno = portno;
+        this.sc = sc;
     }
 
-    public void connect() {
-        System.out.println("connecting to opponent: " + ipAddr + " " + portno);
-        try {
-            System.out.println("Client: connecting to server");
-            Socket s = new Socket(this.ipAddr, this.portno);
-            PrintWriter out = new PrintWriter(s.getOutputStream(), true);
-            BufferedReader input =
-                    new BufferedReader(new InputStreamReader(s.getInputStream()));
-            System.out.println("Client: waiting on server response");
+    private void poll() {
+        while (!StrategoClient.getDisconnect()) {
+            Message msg;
+            if (StrategoClient.hasOutgoingMessage()) {
+                System.out.println("tsh: sc has outgoing msg");
+                msg = sc.getOutgoingMessage();
+                StrategoClient.setHasOutgoingMessage(false);
+            } else
+                msg = this.keepaliveMessage;
             try {
-                System.out.print(input.readLine());
+                Socket socket = new Socket(this.ipAddr, this.portno);
+                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                out.println(msg.message());
+                String response = in.readLine();
+                Message serverMessage = Message.fromJson(response);
+                this.sc.setIncomingMessage(serverMessage);
+                StrategoClient.setHasIncomingMessage(false);
+                try {Thread.sleep(ToServerHandler.keepaliveMS);} catch (InterruptedException e) {}
             } catch (IOException ioe) {
                 ioe.printStackTrace();
             }
-            out.println(this.message.message());
-            System.out.println("closing connection");
-            s.close();
-        } catch (IOException ioe) {
-            System.out.println("Problem with client socket");
-            ioe.printStackTrace();
+            sc.setIsConnected(true);
         }
     }
 
     public void run() {
-        connect();
+        poll();
     }
 }

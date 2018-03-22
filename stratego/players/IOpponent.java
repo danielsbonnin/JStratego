@@ -1,21 +1,16 @@
 package stratego.players;
 
 import stratego.game.Move;
+import stratego.messages.Message;
 
 /**
- * This interface represents the actions of a Stratego LocalPlayer
+ * This interface represents the actions of a Stratego Player
  * @author Daniel Bonnin
  */
 public interface IOpponent {
     /**
-     * Process a move and return next move
-     * @return a new Move
+     * Process a Message and return next Message
+     * @return a new Message
      */
-    Move getNextMove(Move m);
-
-    /**
-     * The initial board setup phase for this player
-     * @return a json-formatted String of a valid p2 setup
-     */
-    String setup();
+    Message getNextMessage(Message m);
 }

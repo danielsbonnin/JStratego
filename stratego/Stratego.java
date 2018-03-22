@@ -1,6 +1,11 @@
 package stratego;
 
 import javafx.application.Application;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Cursor;
@@ -13,10 +18,7 @@ import javafx.stage.Stage;
 import stratego.board.BoardCoords;
 import stratego.game.Game;
 import stratego.game.Move;
-import stratego.messages.StrategoClient;
-import stratego.messages.StrategoServer;
-import stratego.messages.Message;
-import stratego.messages.ToServerHandler;
+import stratego.messages.*;
 import stratego.players.IOpponent;
 import stratego.players.LocalPlayer;
 import stratego.players.RemotePlayer;
@@ -47,17 +49,15 @@ public class Stratego extends Application {
 
     LocalPlayer p1;
     RemotePlayer p2;
-    StrategoServer ss;
-    StrategoClient sc;
+    IStrategoComms opponent;
+
     @FXML
     public void clientClicked() {
-        System.out.println("client clicked");
         this.serverAddrField.setDisable(false);
     }
 
     @FXML
     public void serverClicked() {
-        System.out.println("server clicked");
         this.serverAddrField.setDisable(true);
     }
 
@@ -67,19 +67,26 @@ public class Stratego extends Application {
         }
     }
 
+    public void changeStatusText(String newText) {
+        this.statusText.setText(newText);
+    }
     @FXML public void connectButtonClicked() {
         if (this.serverRadio.isSelected()) {
             this.connectButton.setDisable(true);
             System.out.println("Server to start");
-            ss = new StrategoServer(Integer.parseInt(this.serverPortField.getText()));
+            this.opponent = new StrategoServer(Integer.parseInt(this.serverPortField.getText()));
+            changeStatusText("Awaiting Connection");
         } else {
-            sc = new StrategoClient(this.serverAddrField.getText(), Integer.parseInt(this.serverPortField.getText()));
-            sc.sendMessage(
-                    new Message(
-                            MOVE, new Move(
-                                    new BoardCoords(1, 1), new BoardCoords(2, 2), true, true)
-                    .toJson()));
+            this.opponent = new StrategoClient(this.serverAddrField.getText(), Integer.parseInt(this.serverPortField.getText()));
+            changeStatusText("Attempting to Connect");
         }
+        IStrategoComms.isConnected.addListener(new ChangeListener<Boolean>() {
+            @Override
+            public void changed(ObservableValue<? extends Boolean> ov, Boolean old, Boolean thenew) {
+                System.out.println("isConnected Changed");
+                changeStatusText(thenew ? "Connected" : "Not Connected");
+            }
+        });
     }
 
     @FXML public void isServerToggleGroupToggled() {
@@ -87,7 +94,7 @@ public class Stratego extends Application {
     }
 
     @FXML
-    private TextArea statusText;
+    public TextArea statusText;
 
     @FXML private ToggleGroup isServerToggleGroup;
 
@@ -102,9 +109,10 @@ public class Stratego extends Application {
     @FXML private Button connectButton;
 
     @FXML private Pane serverInput;
+
     @FXML
     void initialize() {
-        this.statusText.setText("Setup Connection");
+        changeStatusText("Setup Connection");
     }
 
     @Override
@@ -126,6 +134,7 @@ public class Stratego extends Application {
         primaryStage.show();
 
         // Retrieve Button instances from hardcoded ui elements
+
         List<Button> pieceButtons = new ArrayList<Button>();
         pieceButtons.add((Button)scene.lookup("#FLAG"));
         pieceButtons.add((Button)scene.lookup("#BOMB"));
@@ -139,9 +148,8 @@ public class Stratego extends Application {
         pieceButtons.add((Button)scene.lookup("#COLONEL"));
         pieceButtons.add((Button)scene.lookup("#GENERAL"));
         pieceButtons.add((Button)scene.lookup("#MARSHALL"));
-
         // instantiate Game object
-        //Game game = new Game(gb, pieceButtons, scene);
+        Game game = new Game(gb, pieceButtons, scene, this.opponent);
 
         StrategoUI ui = new StrategoUI(gb, pieceButtons, 10, 10);
     }

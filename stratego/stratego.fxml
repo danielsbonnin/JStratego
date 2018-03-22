@@ -116,18 +116,18 @@
       </HBox>
       <ButtonBar id="pieceButtonBar" buttonMinWidth="20.0" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="26.0" prefWidth="511.0">
         <buttons>
-          <Button id="FLAG" maxHeight="25.0" maxWidth="42.0" minHeight="25.0" minWidth="40.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="40.0" text="Flag" />
-            <Button id="BOMB" maxWidth="50.0" minWidth="40.0" mnemonicParsing="false" prefWidth="50.0" text="Bomb" />
-            <Button id="SPY" maxHeight="-Infinity" maxWidth="38.0" minHeight="25.0" minWidth="20.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="20.0" text="Spy" />
-            <Button id="SCOUT" maxWidth="30.0" mnemonicParsing="false" text="9" />
-            <Button id="MINER" maxWidth="30.0" mnemonicParsing="false" text="8" />
-            <Button id="SERGEANT" maxWidth="30.0" mnemonicParsing="false" text="7" />
-            <Button id="LIEUTENANT" maxWidth="30.0" mnemonicParsing="false" text="6" />
-            <Button id="CAPTAIN" maxWidth="30.0" mnemonicParsing="false" text="5" />
-            <Button id="MAJOR" maxWidth="30.0" mnemonicParsing="false" text="4" />
-            <Button id="COLONEL" maxWidth="30.0" mnemonicParsing="false" text="3" />
-            <Button id="GENERAL" maxWidth="30.0" mnemonicParsing="false" text="2" />
-            <Button id="MARSHALL" maxWidth="30.0" mnemonicParsing="false" text="1" />
+          <Button id="FLAG" fx:id="FLAG" maxHeight="25.0" maxWidth="42.0" minHeight="25.0" minWidth="40.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="40.0" text="Flag" />
+            <Button id="BOMB" fx:id="BOMB" maxWidth="50.0" minWidth="40.0" mnemonicParsing="false" prefWidth="50.0" text="Bomb" />
+            <Button id="SPY" fx:id="SPY" maxHeight="-Infinity" maxWidth="38.0" minHeight="25.0" minWidth="20.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="20.0" text="Spy" />
+            <Button id="SCOUT" fx:id="SCOUT" maxWidth="30.0" mnemonicParsing="false" text="9" />
+            <Button id="MINER" fx:id="MINER" maxWidth="30.0" mnemonicParsing="false" text="8" />
+            <Button id="SERGEANT" fx:id="SERGEANT" maxWidth="30.0" mnemonicParsing="false" text="7" />
+            <Button id="LIEUTENANT" fx:id="LIEUTENANT" maxWidth="30.0" mnemonicParsing="false" text="6" />
+            <Button id="CAPTAIN" fx:id="CAPTAIN" maxWidth="30.0" mnemonicParsing="false" text="5" />
+            <Button id="MAJOR" fx:id="MAJOR" maxWidth="30.0" mnemonicParsing="false" text="4" />
+            <Button id="COLONEL" fx:id="COLONEL" maxWidth="30.0" mnemonicParsing="false" text="3" />
+            <Button id="GENERAL" fx:id="GENERAL" maxWidth="30.0" mnemonicParsing="false" text="2" />
+            <Button id="MARSHALL" fx:id="MARSHALL" maxWidth="30.0" mnemonicParsing="false" text="1" />
         </buttons>
          <VBox.margin>
             <Insets top="10.0" />

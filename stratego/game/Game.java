@@ -1,12 +1,19 @@
 package stratego.game;
 
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import stratego.messages.IStrategoComms;
+import stratego.messages.Message;
 import stratego.pieces.PieceType;
 import stratego.ui.StrategoUI;
 import stratego.board.*;
@@ -15,17 +22,21 @@ import javafx.scene.Cursor;
 import stratego.players.LocalPlayer;
 import stratego.players.RemotePlayer;
 
+import java.beans.EventHandler;
 import java.util.ArrayList;
 import java.util.List;
 
 import static stratego.Constants.*;
 import static stratego.game.GameState.*;
+import static stratego.messages.IStrategoComms.hasIncoming;
+import static stratego.messages.MsgType.MOVE;
+import static stratego.messages.MsgType.SETUP_COMPLETE;
 
 /**
  * A Game of Stratego
  *
  * <p>Contains the board, players, pieces.</p>
- * <p>Coordinates the Setup, GamePlay phases of a game.</p>
+ * <p>Coordinates the GamePlay phase of a Stratego game.</p>
  *
  * @author Daniel Bonnin
  * //TODO separate game logic from ui
@@ -54,6 +65,7 @@ public class Game implements ChangeListener<Boolean>{
      */
     private LocalPlayer p1;
     private RemotePlayer p2;
+    private IStrategoComms comms;
     private boolean isp1Turn;
 
     /**
@@ -71,7 +83,7 @@ public class Game implements ChangeListener<Boolean>{
     /**
      * @see GameState
      */
-    private GameState state;
+    public static final ObjectProperty<GameState> state = new SimpleObjectProperty<>(SETUP_NOT_PIECE_SELECTED);
 
     /**
      * @see BoardCoords
@@ -92,20 +104,37 @@ public class Game implements ChangeListener<Boolean>{
      * @param scene        the javafx.scene.Scene used for this game's UI
      * @see javafx.scene.Scene
      */
-    public Game(GridPane gp, List<Button> pieceButtons, Scene scene) {
+
+    private ChangeListener<Boolean> commsListener = new ChangeListener<Boolean>() {
+        @Override
+        public void changed(ObservableValue <? extends Boolean> obs, Boolean old, Boolean newValue) {
+            if (obs.getValue() && getState() == AWAIT_P2_MOVE) {
+                Message msg = comms.getIncomingMessage();
+                switch (msg.getType()) {
+                    case MOVE:
+                        p2Move((Move)msg.getObj());
+                        break;
+                    case SETUP_COMPLETE:
+                        p2Setup((BoardData)msg.getObj());
+                    default:
+                        break;
+                }
+            }
+        }
+    };
+
+    public Game(GridPane gp, List<Button> pieceButtons, Scene scene, IStrategoComms comms) {
+
         this.board = new Board(DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT, true);
         this.boardPane = gp;
         this.pieceButtons = new ArrayList<Button>(pieceButtons);
-        this.p1 = new LocalPlayer(DEFAULT_PIECES, true, this);
-
-        this.p2 = new RemotePlayer(this);
-        this.state = GameState.SETUP_NOT_PIECE_SELECTED;
+        this.comms = comms;
         this.scene = scene;
         this.selected = new BoardCoords(0, 0);
-
-        //this.curPossMoves = new ArrayList<Square>();
+        this.p1 = new LocalPlayer();
+        this.p2 = new RemotePlayer(this);
         this.isp1Turn = true;
-
+        this.state.setValue(SETUP_NOT_PIECE_SELECTED);
         // initialize boardPane with Square objects from this.board
         setupGridPane();
 
@@ -114,9 +143,13 @@ public class Game implements ChangeListener<Boolean>{
 
         // notify Game when new Move is available from UI
         StrategoUI.newClick.addListener(this);
+        IStrategoComms.hasIncoming.addListener(this.commsListener);
 
         // GUI button to indicate finished setup
         Button finishedButton = (Button) this.scene.lookup("#btn_setup_finished");
+
+        // send finished message to opponent
+        comms.sendMessage(new Message(SETUP_COMPLETE, "[]"));
 
         // finished button click handler
         finishedButton.setOnMouseClicked( e-> {
@@ -181,8 +214,12 @@ public class Game implements ChangeListener<Boolean>{
         Move proposed = new Move(this.pickedUpPiece, dest, false, true);
         if (!this.board.move(proposed, this.isp1Turn)) {
             System.out.println("Invalid move.");
+            setState(MOVE_NOT_ORIGIN_SELECTED);
+        } else {
+            comms.sendMessage(new Message(MOVE, proposed.toJson()));
+            setState(AWAIT_P2_MOVE);
         }
-        setState(MOVE_NOT_ORIGIN_SELECTED);
+
     }
 
     /**
@@ -193,6 +230,7 @@ public class Game implements ChangeListener<Boolean>{
         // loop pieceButtons
         for (Button b : this.pieceButtons) {
             // PieceType represented by this button
+            System.out.println(b.getId());
             PieceType pt = PIECETYPESTRING_TO_PIECETYPE.get(b.getId());
 
             // Count of this button's PieceType in inventory
@@ -213,8 +251,9 @@ public class Game implements ChangeListener<Boolean>{
     /**
      * Stub for placing p2 pieces during development
      */
-    public void piecePlacementP2() {
-        //
+    public void piecePlacementP2(BoardData p2Placement) {
+
+
         try {
             assert (this.board.getWidth() == 10 && this.board.getHeight() == 10);
         } catch (AssertionError e) {
@@ -245,7 +284,7 @@ public class Game implements ChangeListener<Boolean>{
             // User clicked on a piece button
             b.setOnMouseClicked(e-> {
                 // Piece already selected. Put back old piece
-                if (this.state == SETUP_PIECE_SELECTED) {
+                if (getState() == SETUP_PIECE_SELECTED) {
                     this.p1.getInventory().replace(this.pieceInHand);
                     this.setState(SETUP_NOT_PIECE_SELECTED);
                     updatePieceButtons();
@@ -284,26 +323,34 @@ public class Game implements ChangeListener<Boolean>{
      */
     public void setState(GameState state) {
         System.out.println("new game state: " + state.toString());
-        this.state = state; }
+        this.state.setValue(state);
+    }
 
     /**
      * Gets state.
      *
      * @return GameState state
      */
-    public GameState getState() { return this.state; }
+    public GameState getState() {
+        return Game.state.getValue();
+    }
 
     /**
      * Gets board
      */
     public Board getBoard() { return this.board; }
 
+    private void p2Move(Move move) {
+        this.board.move(move, isp1Turn);
+        setState(MOVE_NOT_ORIGIN_SELECTED);
+    }
+
     /**
      * Process coordinates of a gameBoard click
      * @param bc grid coordinates of click
      */
     private void boardClick(BoardCoords bc) {
-        switch(this.state) {
+        switch(Game.state.getValue()) {
             case SETUP_NOT_PIECE_SELECTED:
                 pickupClick(bc);
                 break;
@@ -323,7 +370,6 @@ public class Game implements ChangeListener<Boolean>{
 
     @Override
     public void changed(ObservableValue<? extends Boolean> obs, Boolean old, Boolean newVal) {
-        System.out.println("new move reported: " + StrategoUI.getCoords());
         boardClick(StrategoUI.getCoords());
     }
 }

@@ -8,48 +8,57 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+import static stratego.messages.MsgType.KEEPALIVE;
+import static stratego.messages.MsgType.NOT_READY;
+
 /**
  * StrategoServer utility to process new message from client
  * @author Daniel Bonnin
  */
 public class FromClientHandler implements Runnable {
     private Socket socket;
-    private Message newMessage;
-    private String rawMessageString;
-    public FromClientHandler(Socket newAccept) {
-        this.socket = newAccept;
-        System.out.println("fromclienthandler");
-    }
-
-    /**
-     * initialize newMessage from json
-     */
-    private void parseMessage() {
-        Gson gson = new Gson();
-        this.newMessage = gson.fromJson(this.rawMessageString, Message.class);
-        System.out.println("Received a " + this.newMessage.getType().toString() + " message.");
-        switch (this.newMessage.getType()) {
-            
-        }
+    private StrategoServer ss;
+    public static Message notReadyMessage = new Message(NOT_READY, "[]");
+    public FromClientHandler(StrategoServer ss) {
+        this.ss = ss;
+        System.out.println("new connection from client");
+        ss.setIsConnected(false);
     }
 
     public void run() {
-        try {
-            PrintWriter out =
-                    new PrintWriter(this.socket.getOutputStream(), true);
-            out.println("Hello");
-            BufferedReader input =
-                new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
-            this.rawMessageString = input.readLine();
-            out.println("recvd");
-        } catch (IOException e) {
-            e.printStackTrace();
+        while (!StrategoServer.getDisconnect()) {
+            try {
+                this.socket = ss.serverSocket.accept();
+                this.ss.setIsConnected(true);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                Message msg;
+                if (StrategoServer.getHasOutgoingMessage()) {
+                    msg = ss.getOutgoingMessage();
+                    StrategoServer.setHasOutgoingMessage(false);
+                } else
+                    msg = FromClientHandler.notReadyMessage;
+
+                PrintWriter out =
+                        new PrintWriter(this.socket.getOutputStream(), true);
+                BufferedReader input =
+                        new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
+                Message clientMessage = Message.fromJson(input.readLine());
+                if (clientMessage.getType() != KEEPALIVE) {
+                    ss.setHasIncomingMessage(true);
+                    ss.setIncomingMessage(clientMessage);
+                }
+                out.println(msg.message());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                this.socket.close();
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
         }
-        try {
-            this.socket.close();
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        }
-        parseMessage();
     }
 }
