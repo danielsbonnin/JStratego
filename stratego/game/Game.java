@@ -115,7 +115,7 @@ public class Game implements ChangeListener<Boolean>{
                         p2Move((Move)msg.getObj());
                         break;
                     case SETUP_COMPLETE:
-                        p2Setup((BoardData)msg.getObj());
+                        piecePlacementP2((BoardData)msg.getObj());
                     default:
                         break;
                 }
@@ -123,12 +123,11 @@ public class Game implements ChangeListener<Boolean>{
         }
     };
 
-    public Game(GridPane gp, List<Button> pieceButtons, Scene scene, IStrategoComms comms) {
+    public Game(GridPane gp, List<Button> pieceButtons, Scene scene) {
 
         this.board = new Board(DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT, true);
         this.boardPane = gp;
-        this.pieceButtons = new ArrayList<Button>(pieceButtons);
-        this.comms = comms;
+        this.pieceButtons = pieceButtons;
         this.scene = scene;
         this.selected = new BoardCoords(0, 0);
         this.p1 = new LocalPlayer();
@@ -138,18 +137,20 @@ public class Game implements ChangeListener<Boolean>{
         // initialize boardPane with Square objects from this.board
         setupGridPane();
 
+    }
+
+    public void start(IStrategoComms comms) {
+        this.comms = comms;
+        IStrategoComms.hasIncoming.addListener(this.commsListener);
         // initialize piece buttons according to player's inventory
         setupPieceButtons();
 
         // notify Game when new Move is available from UI
         StrategoUI.newClick.addListener(this);
-        IStrategoComms.hasIncoming.addListener(this.commsListener);
 
         // GUI button to indicate finished setup
         Button finishedButton = (Button) this.scene.lookup("#btn_setup_finished");
 
-        // send finished message to opponent
-        comms.sendMessage(new Message(SETUP_COMPLETE, "[]"));
 
         // finished button click handler
         finishedButton.setOnMouseClicked( e-> {
@@ -165,6 +166,9 @@ public class Game implements ChangeListener<Boolean>{
 
             // send a message to remote player
 
+            // send finished message to opponent
+            comms.sendMessage(new Message(SETUP_COMPLETE, "[]"));
+
             // initiate game play mode
             setState(MOVE_NOT_ORIGIN_SELECTED);
         });
@@ -172,7 +176,6 @@ public class Game implements ChangeListener<Boolean>{
         // initiate setup mode
         setState(SETUP_NOT_PIECE_SELECTED);
     }
-
     /**
      * piece picked up during setup
      */
@@ -227,6 +230,7 @@ public class Game implements ChangeListener<Boolean>{
      * @see LocalPlayer#inventory
      */
     private void updatePieceButtons() {
+        System.out.println("update piece buttons");
         // loop pieceButtons
         for (Button b : this.pieceButtons) {
             // PieceType represented by this button
@@ -272,10 +276,9 @@ public class Game implements ChangeListener<Boolean>{
      * Setup UI for placing pieces on the board
      */
     private void setupPieceButtons() {
+        System.out.println("setup piece buttons");
         updatePieceButtons();
 
-        // setup test p2 pieces
-        piecePlacementP2();
         // GUI button to indicate finished setup
         Button finishedButton = (Button) this.scene.lookup("#btn_setup_finished");
 

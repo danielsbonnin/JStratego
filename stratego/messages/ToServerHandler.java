@@ -16,6 +16,7 @@ public class ToServerHandler implements Runnable {
     private Message message;
     private String ipAddr;
     private int portno;
+    private boolean hasPreviouslyConnected;
     private StrategoClient sc;
     private Message keepaliveMessage;
     private static int keepaliveMS = MS_BETWEEN_KEEPALIVES;
@@ -25,6 +26,7 @@ public class ToServerHandler implements Runnable {
         this.ipAddr = ipAddr;
         this.portno = portno;
         this.sc = sc;
+        this.hasPreviouslyConnected = false;
     }
 
     private void poll() {
@@ -45,11 +47,15 @@ public class ToServerHandler implements Runnable {
                 Message serverMessage = Message.fromJson(response);
                 this.sc.setIncomingMessage(serverMessage);
                 StrategoClient.setHasIncomingMessage(false);
+                socket.close();
                 try {Thread.sleep(ToServerHandler.keepaliveMS);} catch (InterruptedException e) {}
             } catch (IOException ioe) {
                 ioe.printStackTrace();
             }
-            sc.setIsConnected(true);
+            if (!this.hasPreviouslyConnected) {
+                this.hasPreviouslyConnected = true;
+                IStrategoComms.isConnected.set(true);
+            }
         }
     }
 

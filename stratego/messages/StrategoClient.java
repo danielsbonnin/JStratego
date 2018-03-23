@@ -43,7 +43,7 @@ public class StrategoClient implements IStrategoComms {
     }
 
     public void setIsConnected(boolean isConnected) {
-        this.isConnected.set(isConnected);
+        IStrategoComms.isConnected.set(isConnected);
     }
 
     public void sendMessage(Message message) {

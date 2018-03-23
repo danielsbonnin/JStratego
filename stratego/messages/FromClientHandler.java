@@ -18,18 +18,22 @@ import static stratego.messages.MsgType.NOT_READY;
 public class FromClientHandler implements Runnable {
     private Socket socket;
     private StrategoServer ss;
+    private boolean hasPreviouslyConnected;
     public static Message notReadyMessage = new Message(NOT_READY, "[]");
     public FromClientHandler(StrategoServer ss) {
         this.ss = ss;
-        System.out.println("new connection from client");
-        ss.setIsConnected(false);
+        this.hasPreviouslyConnected = false;
     }
 
     public void run() {
+        System.out.println("Waiting on client");
         while (!StrategoServer.getDisconnect()) {
             try {
                 this.socket = ss.serverSocket.accept();
-                this.ss.setIsConnected(true);
+                if (!this.hasPreviouslyConnected) {
+                    this.ss.setIsConnected(true);
+                    this.hasPreviouslyConnected = true;
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }

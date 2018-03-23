@@ -79,13 +79,13 @@
                         <VBox id="serverInfoPane" fx:id="serverInput" fillWidth="false" prefHeight="122.0" prefWidth="100.0">
                            <children>
                               <Label text="Server Address: " />
-                              <TextField fx:id="serverAddrField">
+                              <TextField fx:id="serverAddrField" text="localhost">
                                  <VBox.margin>
                                     <Insets left="5.0" right="5.0" top="5.0" />
                                  </VBox.margin>
                               </TextField>
                               <Label text="Server Port:" />
-                              <TextField fx:id="serverPortField">
+                              <TextField fx:id="serverPortField" text="6655">
                                  <VBox.margin>
                                     <Insets left="5.0" right="5.0" top="5.0" />
                                  </VBox.margin>

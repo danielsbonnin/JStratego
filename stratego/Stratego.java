@@ -1,6 +1,7 @@
 package stratego;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
@@ -47,44 +48,69 @@ public class Stratego extends Application {
         launch(args);
     }
 
-    LocalPlayer p1;
-    RemotePlayer p2;
-    IStrategoComms opponent;
+    /**
+     * server or client, representing the opponent
+     */
+    public static IStrategoComms opponent;
 
+    /**
+     * Handler for client button clicked
+     */
     @FXML
     public void clientClicked() {
         this.serverAddrField.setDisable(false);
     }
 
+    /**
+     * Handler for server button clicked
+     */
     @FXML
     public void serverClicked() {
         this.serverAddrField.setDisable(true);
     }
 
+    /**
+     * Handler for server/client radio buttons clicked
+     *
+     * disables ip address text input if server is selected
+     */
     @FXML public void connectionTypeClicked() {
         if (this.clientRadio.isSelected()) {
             this.serverAddrField.setDisable(false);
         }
     }
 
+    /**
+     * Set the status text on the ui
+     * @param newText
+     */
     public void changeStatusText(String newText) {
         this.statusText.setText(newText);
     }
+
+    /**
+     * Handler for the connect button clicked.
+     * Initiates listening (server) or connecting (client)
+     * Sets the opponent; opponent is initialized only after this.
+     */
     @FXML public void connectButtonClicked() {
         if (this.serverRadio.isSelected()) {
             this.connectButton.setDisable(true);
-            System.out.println("Server to start");
-            this.opponent = new StrategoServer(Integer.parseInt(this.serverPortField.getText()));
+            Stratego.opponent = new StrategoServer(Integer.parseInt(this.serverPortField.getText()));
             changeStatusText("Awaiting Connection");
         } else {
-            this.opponent = new StrategoClient(this.serverAddrField.getText(), Integer.parseInt(this.serverPortField.getText()));
+            Stratego.opponent = new StrategoClient(this.serverAddrField.getText(), Integer.parseInt(this.serverPortField.getText()));
             changeStatusText("Attempting to Connect");
         }
         IStrategoComms.isConnected.addListener(new ChangeListener<Boolean>() {
             @Override
             public void changed(ObservableValue<? extends Boolean> ov, Boolean old, Boolean thenew) {
-                System.out.println("isConnected Changed");
-                changeStatusText(thenew ? "Connected" : "Not Connected");
+                if (thenew) {
+                    changeStatusText("Connected");
+                    initGame();
+                } else {
+                    changeStatusText("Not Connected");
+                }
             }
         });
     }
@@ -110,9 +136,13 @@ public class Stratego extends Application {
 
     @FXML private Pane serverInput;
 
+    public static Game game;
     @FXML
     void initialize() {
         changeStatusText("Setup Connection");
+    }
+    void initGame() {
+        Stratego.game.start(Stratego.opponent);
     }
 
     @Override
@@ -149,8 +179,7 @@ public class Stratego extends Application {
         pieceButtons.add((Button)scene.lookup("#GENERAL"));
         pieceButtons.add((Button)scene.lookup("#MARSHALL"));
         // instantiate Game object
-        Game game = new Game(gb, pieceButtons, scene, this.opponent);
-
+        Stratego.game = new Game(gb, pieceButtons, scene);
         StrategoUI ui = new StrategoUI(gb, pieceButtons, 10, 10);
     }
 }

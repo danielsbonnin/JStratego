@@ -36,14 +36,6 @@ public class StrategoServer implements IStrategoComms{
         t.start();
     }
 
-    public void listen() throws IOException {
-        while (!StrategoServer.disconnect.get()) {
-            Socket socket = serverSocket.accept();
-            System.out.println("server got a connection attempt");
-        }
-        this.serverSocket.close();
-    }
-
     public boolean isConnected() {
         return this.isConnected.get();
     }
