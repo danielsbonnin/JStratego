@@ -84,7 +84,8 @@ public class BoardData {
         } catch (AssertionError e) {
             System.out.println("Dimensions of new board state do not match existing.");
         }
-        this.state = new ArrayList<>(state);
+        this.state = new ArrayList<>();
+        this.state.addAll(newState);
     }
 
     /**
@@ -94,9 +95,9 @@ public class BoardData {
      */
     public static List< List<PlayerPiece> > fromJson(String newState) {
         Gson gson = new Gson();
-        Type collectionType = new TypeToken< List< List<PieceType> > >(){}.getType();
+        Type collectionType = new TypeToken< List< List<PlayerPiece> > >(){}.getType();
         List< List<PlayerPiece>> newBoard =
-                (gson.fromJson(newState, collectionType));
+                gson.fromJson(newState, collectionType);
         return newBoard;
     }
 
@@ -107,7 +108,7 @@ public class BoardData {
         for (int i = 0; i < (getHeight() / 2); i++)
             for (int j = 0; j < (getWidth()/2); j++) {
                 BoardCoords top = new BoardCoords(i, j);
-                BoardCoords bottom = new BoardCoords(getHeight() - i, getWidth()-j);
+                BoardCoords bottom = new BoardCoords(getHeight() - i - 1, getWidth()-j - 1);
                 PlayerPiece newTop = get(bottom);
                 PlayerPiece newBottom = get(top);
                 newBottom.setIsP1(!newBottom.getIsP1());
@@ -122,6 +123,7 @@ public class BoardData {
      */
     public String toJsonString() {
         Gson gson = new Gson();
-        return gson.toJson(this.state);
+        Type ptList = new TypeToken<List<List<PlayerPiece>>>() {}.getType();
+        return gson.toJson(this.state, ptList);
     }
 }

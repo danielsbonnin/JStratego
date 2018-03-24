@@ -51,8 +51,8 @@ public class FromClientHandler implements Runnable {
                         new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
                 Message clientMessage = Message.fromJson(input.readLine());
                 if (clientMessage.getType() != KEEPALIVE) {
-                    ss.setHasIncomingMessage(true);
                     ss.setIncomingMessage(clientMessage);
+                    IStrategoComms.hasIncoming.setValue(true);
                 }
                 out.println(msg.message());
             } catch (IOException e) {

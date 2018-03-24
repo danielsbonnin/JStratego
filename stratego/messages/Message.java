@@ -27,7 +27,7 @@ public class Message {
      * The message to transmit
      * @return
      */
-    String message() {
+    public String message() {
         Gson gson = new Gson();
         return gson.toJson(this);
     }

@@ -95,20 +95,14 @@ public class Game implements ChangeListener<Boolean>{
      */
     private List<Square> curPossMoves;
 
-    /**
-     * Constructor produces a Game containing a board of default size
-     * and Players with default pieces
-     *
-     * @param gp           UI element representing the game board
-     * @param pieceButtons Button for each piece type
-     * @param scene        the javafx.scene.Scene used for this game's UI
-     * @see javafx.scene.Scene
-     */
 
+    /**
+     * Lister to notify on message from opponent
+     */
     private ChangeListener<Boolean> commsListener = new ChangeListener<Boolean>() {
         @Override
         public void changed(ObservableValue <? extends Boolean> obs, Boolean old, Boolean newValue) {
-            if (obs.getValue() && getState() == AWAIT_P2_MOVE) {
+            if (obs.getValue()) {
                 Message msg = comms.getIncomingMessage();
                 switch (msg.getType()) {
                     case MOVE:
@@ -119,10 +113,20 @@ public class Game implements ChangeListener<Boolean>{
                     default:
                         break;
                 }
+                IStrategoComms.hasIncoming.set(false);
             }
         }
     };
 
+    /**
+     * Constructor produces a Game containing a board of default size
+     * and Players with default pieces
+     *
+     * @param gp           UI element representing the game board
+     * @param pieceButtons Button for each piece type
+     * @param scene        the javafx.scene.Scene used for this game's UI
+     * @see javafx.scene.Scene
+     */
     public Game(GridPane gp, List<Button> pieceButtons, Scene scene) {
 
         this.board = new Board(DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT, true);
@@ -141,7 +145,10 @@ public class Game implements ChangeListener<Boolean>{
 
     public void start(IStrategoComms comms) {
         this.comms = comms;
+
+        // notify commsListener when opponent has new message
         IStrategoComms.hasIncoming.addListener(this.commsListener);
+
         // initialize piece buttons according to player's inventory
         setupPieceButtons();
 
@@ -150,7 +157,6 @@ public class Game implements ChangeListener<Boolean>{
 
         // GUI button to indicate finished setup
         Button finishedButton = (Button) this.scene.lookup("#btn_setup_finished");
-
 
         // finished button click handler
         finishedButton.setOnMouseClicked( e-> {
@@ -165,9 +171,11 @@ public class Game implements ChangeListener<Boolean>{
             vbox.getChildren().removeAll(pieceButtonBar, finishedButtonVBox);
 
             // send a message to remote player
-
+            BoardData toSend = this.board.toBoardData();
+            toSend.reverse();
             // send finished message to opponent
-            comms.sendMessage(new Message(SETUP_COMPLETE, "[]"));
+            Message finishedMessage = new Message(SETUP_COMPLETE, toSend.toJsonString());
+            comms.sendMessage(finishedMessage);
 
             // initiate game play mode
             setState(MOVE_NOT_ORIGIN_SELECTED);
@@ -176,6 +184,7 @@ public class Game implements ChangeListener<Boolean>{
         // initiate setup mode
         setState(SETUP_NOT_PIECE_SELECTED);
     }
+
     /**
      * piece picked up during setup
      */
@@ -222,7 +231,6 @@ public class Game implements ChangeListener<Boolean>{
             comms.sendMessage(new Message(MOVE, proposed.toJson()));
             setState(AWAIT_P2_MOVE);
         }
-
     }
 
     /**
@@ -230,11 +238,9 @@ public class Game implements ChangeListener<Boolean>{
      * @see LocalPlayer#inventory
      */
     private void updatePieceButtons() {
-        System.out.println("update piece buttons");
         // loop pieceButtons
         for (Button b : this.pieceButtons) {
             // PieceType represented by this button
-            System.out.println(b.getId());
             PieceType pt = PIECETYPESTRING_TO_PIECETYPE.get(b.getId());
 
             // Count of this button's PieceType in inventory
@@ -267,9 +273,13 @@ public class Game implements ChangeListener<Boolean>{
             int row = i / 10;
             int col = i % 10;
             Square sq = this.board.getSquare(row, col);
-            Piece p = PIECETYPE_TO_PIECECLASS.get(DEFAULT_PIECES.get(i));
-            p.setP1(false);
-            sq.setPiece(p);
+            BoardCoords pos = new BoardCoords(row, col);
+            Piece p;
+            if (p2Placement.get(pos).getPt() != null) {
+                p = PIECETYPE_TO_PIECECLASS.get(p2Placement.get(pos).getPt());
+                p.setP1(false);
+                sq.setPiece(p);
+            }
         }
     }
     /**

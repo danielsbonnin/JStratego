@@ -1,10 +1,6 @@
 package stratego;
 
 import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
@@ -16,19 +12,12 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
-import stratego.board.BoardCoords;
 import stratego.game.Game;
-import stratego.game.Move;
 import stratego.messages.*;
-import stratego.players.IOpponent;
-import stratego.players.LocalPlayer;
-import stratego.players.RemotePlayer;
 import stratego.ui.StrategoUI;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static stratego.messages.MsgType.MOVE;
 
 /**
  * Main application of JStratego.

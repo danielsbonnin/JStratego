@@ -8,6 +8,7 @@ import java.net.Socket;
 
 import static stratego.messages.Constants.MS_BETWEEN_KEEPALIVES;
 import static stratego.messages.MsgType.KEEPALIVE;
+import static stratego.messages.MsgType.NOT_READY;
 
 /**
  * @author Daniel Bonnin
@@ -46,7 +47,10 @@ public class ToServerHandler implements Runnable {
                 String response = in.readLine();
                 Message serverMessage = Message.fromJson(response);
                 this.sc.setIncomingMessage(serverMessage);
-                StrategoClient.setHasIncomingMessage(false);
+                if (serverMessage.getType() == NOT_READY)
+                    StrategoClient.setHasIncomingMessage(false);
+                else
+                    StrategoClient.setHasIncomingMessage(true);
                 socket.close();
                 try {Thread.sleep(ToServerHandler.keepaliveMS);} catch (InterruptedException e) {}
             } catch (IOException ioe) {
