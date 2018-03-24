@@ -1,5 +1,6 @@
 package stratego.game;
 
+import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -106,10 +107,18 @@ public class Game implements ChangeListener<Boolean>{
                 Message msg = comms.getIncomingMessage();
                 switch (msg.getType()) {
                     case MOVE:
-                        p2Move((Move)msg.getObj());
+                        Platform.runLater(new Runnable() {
+                            public void run() {
+                                p2Move((Move)msg.getObj());
+                            }
+                        });
                         break;
                     case SETUP_COMPLETE:
-                        piecePlacementP2((BoardData)msg.getObj());
+                        Platform.runLater(new Runnable() {
+                            public void run() {
+                                piecePlacementP2((BoardData) msg.getObj());
+                            }
+                        });
                     default:
                         break;
                 }
