@@ -190,15 +190,18 @@ public class Board {
         Square end = getSquare(move.getDestination().r, move.getDestination().c);
 
         if (!end.isEmpty()) {  // attack move
-            PieceType eType = end.getPiece().getPt();
-
+            Piece endPiece = end.getPiece();
             // attacker lost, attacking piece is discarded
-            if (!stPiece.getKills().contains(eType)) {
+            if (!stPiece.getKills().contains(endPiece.getPt())) {
                 // pass
 
             } else { // attacker won, attacked piece is discarded
                 end.remove();
-                end.setPiece(stPiece);
+
+                // attacker and attacked are not same type
+                if (!endPiece.getKills().contains(stPiece.getPt()))
+                    end.setPiece(stPiece);
+                else { } // attacker and attacked are same type; kill both
             }
         } else { // move to empty land
             end.setPiece(stPiece);
