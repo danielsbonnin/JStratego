@@ -43,6 +43,10 @@ public class Move {
         this.destination = destination;
     }
 
+    public boolean isFinal() {
+        return this.isFinal;
+    }
+
     public String toJson() {
         Gson gson = new Gson();
         return gson.toJson(this);

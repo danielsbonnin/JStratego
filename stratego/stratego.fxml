@@ -135,7 +135,7 @@
       </ButtonBar>
       <VBox id="btn_finished_vbox" alignment="CENTER">
          <children>
-            <Button id="btn_setup_finished" mnemonicParsing="false" text="Finished" />
+            <Button id="btn_setup_finished" fx:id="btn_setup_finished" disable="true" mnemonicParsing="false" text="Finished" />
          </children>
          <VBox.margin>
             <Insets top="20.0" />

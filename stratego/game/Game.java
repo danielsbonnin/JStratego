@@ -35,6 +35,7 @@ import static stratego.game.GameState.*;
 import static stratego.messages.IStrategoComms.hasIncoming;
 import static stratego.messages.MsgType.MOVE;
 import static stratego.messages.MsgType.SETUP_COMPLETE;
+import static stratego.pieces.PieceType.FLAG;
 
 /**
  * A Game of Stratego
@@ -100,6 +101,7 @@ public class Game implements ChangeListener<Boolean>{
      */
     private List<Square> curPossMoves;
 
+    private Button finishedButton;
 
     /**
      * Lister to notify on message from opponent
@@ -158,10 +160,13 @@ public class Game implements ChangeListener<Boolean>{
 
     }
 
-    public void start(IStrategoComms comms, TextArea statusText) {
+    public void start(IStrategoComms comms, TextArea statusText, Button finishedButton) {
         this.comms = comms;
         this.statusText = statusText;
 
+        // GUI button to indicate finished setup
+        this.finishedButton = finishedButton;
+        this.finishedButton.setDisable(true);
         setState(SETUP_NOT_PIECE_SELECTED);
         // notify commsListener when opponent has new message
         IStrategoComms.hasIncoming.addListener(this.commsListener);
@@ -172,11 +177,8 @@ public class Game implements ChangeListener<Boolean>{
         // notify Game when new Move is available from UI
         StrategoUI.newClick.addListener(this);
 
-        // GUI button to indicate finished setup
-        Button finishedButton = (Button) this.scene.lookup("#btn_setup_finished");
-
         // finished button click handler
-        finishedButton.setOnMouseClicked( e-> {
+        this.finishedButton.setOnMouseClicked( e-> {
             // reference the ui elements to remove
             ButtonBar pieceButtonBar = (ButtonBar) this.scene.lookup("#pieceButtonBar");
             VBox finishedButtonVBox = (VBox) this.scene.lookup("#btn_finished_vbox");
@@ -206,10 +208,15 @@ public class Game implements ChangeListener<Boolean>{
      */
     private void pickupClick(BoardCoords bc) {
         if (this.board.validPickup(bc)) {
+            this.p1.incrementPiecesLeftInInventory();
             this.pieceInHand= this.board.pickupPiece(bc);
             setState(SETUP_PIECE_SELECTED);
             this.scene.getRoot().setCursor(Cursor.CROSSHAIR);
         }
+        if (this.p1.getPiecesLeftInInventory() == 0)
+            this.finishedButton.setDisable(false);
+        else
+            this.finishedButton.setDisable(true);
     }
 
     /**
@@ -217,9 +224,17 @@ public class Game implements ChangeListener<Boolean>{
      */
     private void placementClick(BoardCoords bc) {
         if (!this.board.tryPlacePiece(bc, this.pieceInHand)) {
-        }
+            this.p1.getInventory().replace(this.pieceInHand);
+            updatePieceButtons();
+        } else
+            this.p1.decrementPiecesLeftInInventory();
         this.scene.getRoot().setCursor(Cursor.HAND);
         setState(SETUP_NOT_PIECE_SELECTED);
+        if (this.p1.getPiecesLeftInInventory() == 0) {
+            this.finishedButton.setDisable(false);
+        } else {
+            this.finishedButton.setDisable(true);
+        }
     }
 
     /**
@@ -243,13 +258,20 @@ public class Game implements ChangeListener<Boolean>{
      * piece destination click during game
      */
     private void destClick(BoardCoords dest) {
-        Move proposed = new Move(this.pickedUpPiece, dest, false, true);
+        Square destSquare = this.board.getSquare(dest.r, dest.c);
+        boolean victory = false;
+        if (!destSquare.isEmpty() && destSquare.getPiece().getPt() == FLAG)
+            victory = true;
+        Move proposed = new Move(this.pickedUpPiece, dest, victory, true);
         if (!this.board.move(proposed, true)) {
             System.out.println("Invalid move.");
             setState(MOVE_NOT_ORIGIN_SELECTED);
         } else {
             comms.sendMessage(new Message(MOVE, proposed.reversed().toJson()));
-            setState(AWAIT_P2_MOVE);
+            if (victory)
+                setState(GAME_WON);
+            else
+                setState(AWAIT_P2_MOVE);
         }
     }
 
@@ -265,7 +287,6 @@ public class Game implements ChangeListener<Boolean>{
 
             // Count of this button's PieceType in inventory
             int count = this.p1.getInventory().getCount(pt);
-
             if (count > 0) {        // at least 1 piece of this type
                 // TODO: make constants of these hardcoded styles
                 b.setStyle("-fx-background-color: green;");
@@ -274,6 +295,11 @@ public class Game implements ChangeListener<Boolean>{
                 // TODO: make constant
                 b.setStyle("-fx-background-color: red;");
                 b.setDisable(true); // disable this button
+            }
+            if (this.p1.getPiecesLeftInInventory() == 0) {
+                this.finishedButton.setDisable(false);
+            } else {
+                this.finishedButton.setDisable(true);
             }
         }
     }
@@ -317,9 +343,6 @@ public class Game implements ChangeListener<Boolean>{
         System.out.println("setup piece buttons");
         updatePieceButtons();
 
-        // GUI button to indicate finished setup
-        Button finishedButton = (Button) this.scene.lookup("#btn_setup_finished");
-
         // initialize piece buttons
         for (Button b : this.pieceButtons) {
             // User clicked on a piece button
@@ -338,7 +361,7 @@ public class Game implements ChangeListener<Boolean>{
                     b.setStyle("-fx-background-color: red;");
                     b.setDisable(true);
                 }
-
+                System.out.println("pieces left in inventory: " + this.p1.getPiecesLeftInInventory());
                 // set cursor to crosshair
                 this.scene.getRoot().setCursor(Cursor.CROSSHAIR);
                 setState(SETUP_PIECE_SELECTED);
@@ -387,6 +410,11 @@ public class Game implements ChangeListener<Boolean>{
             case AWAIT_P2_MOVE:
                 setStatusText("Waiting for opponent to move");
                 break;
+            case GAME_LOST:
+                setStatusText("You lost.");
+                break;
+            case GAME_WON:
+                setStatusText("You won!");
             default:
                 break;
         }
@@ -409,7 +437,10 @@ public class Game implements ChangeListener<Boolean>{
 
     private void p2Move(Move move) {
         this.board.move(move, false);
-        setState(MOVE_NOT_ORIGIN_SELECTED);
+        if (move.isFinal())
+            setState(GAME_LOST);
+        else
+            setState(MOVE_NOT_ORIGIN_SELECTED);
     }
 
     /**

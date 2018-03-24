@@ -24,5 +24,7 @@ public enum GameState {
      * Move not origin selected game state.
      */
     MOVE_NOT_ORIGIN_SELECTED,
-    AWAIT_P2_MOVE
+    AWAIT_P2_MOVE,
+    GAME_LOST,
+    GAME_WON
 }

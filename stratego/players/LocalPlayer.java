@@ -24,6 +24,7 @@ public class LocalPlayer {
      */
     protected PieceInventory inventory;
 
+    private int piecesLeftInInventory;
     private boolean isP1;
 
     private Game g;
@@ -35,6 +36,7 @@ public class LocalPlayer {
     public LocalPlayer(List<PieceType> pieces, Game g) {
         this.g = g;
         this.isP1 = true;
+        this.piecesLeftInInventory = pieces.size();
         setupInventory(pieces);
     }
 
@@ -48,6 +50,7 @@ public class LocalPlayer {
         this.g = g;
         this.isP1 = isP1;
         setupInventory(pieces);
+        this.piecesLeftInInventory = pieces.size();
         //new Thread(this).start();
     }
 
@@ -61,6 +64,7 @@ public class LocalPlayer {
 
     private void setupInventory(List<PieceType> pieces) {
         this.inventory = new PieceInventory(pieces);
+        this.piecesLeftInInventory = pieces.size();
     }
 
     /**
@@ -70,6 +74,18 @@ public class LocalPlayer {
      */
     public void setHandle(String handle) {
         this.handle = handle;
+    }
+
+    public int getPiecesLeftInInventory() {
+        return this.piecesLeftInInventory;
+    }
+
+    public void decrementPiecesLeftInInventory() {
+        this.piecesLeftInInventory--;
+    }
+
+    public void incrementPiecesLeftInInventory() {
+        this.piecesLeftInInventory++;
     }
 
     /**

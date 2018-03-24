@@ -123,6 +123,8 @@ public class Stratego extends Application {
 
     @FXML private Button connectButton;
 
+    @FXML private Button btn_setup_finished;
+
     @FXML private Pane serverInput;
 
     public static Game game;
@@ -131,7 +133,7 @@ public class Stratego extends Application {
         changeStatusText("Setup Connection");
     }
     void initGame() {
-        Stratego.game.start(Stratego.opponent, this.statusText);
+        Stratego.game.start(Stratego.opponent, this.statusText, this.btn_setup_finished);
     }
 
     @Override
