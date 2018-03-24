@@ -110,10 +110,14 @@ public class Board {
      */
     public boolean tryPlacePiece(BoardCoords bc, PieceType pt) {
         if (!validPlacement(bc)) return false;
-        Piece toPlace = PIECETYPE_TO_PIECECLASS.get(pt);
-        toPlace.setP1(true);
-        Square placeSq = getSquare(bc.r, bc.c);
-        placeSq.setPiece(toPlace);
+        Class c = PIECETYPE_TO_PIECECLASS.get(pt);
+        Piece toPlace;
+        try {
+            toPlace = (Piece)c.getDeclaredConstructor().newInstance();
+            toPlace.setP1(true);
+            Square placeSq = getSquare(bc.r, bc.c);
+            placeSq.setPiece(toPlace);
+        } catch (Exception e) {e.printStackTrace();}
         return true;
     }
 

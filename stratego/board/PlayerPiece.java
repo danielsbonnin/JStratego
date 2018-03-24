@@ -29,4 +29,7 @@ public class PlayerPiece {
 
     public void setIsP1(boolean isP1) { this.isP1 = isP1; }
     public boolean getIsP1() { return this.isP1; }
+    public String toString() {
+        return "P1: " + this.isP1 + " pt: " + this.pt.toString();
+    }
 }

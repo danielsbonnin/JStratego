@@ -23,6 +23,14 @@ public class Move {
         return this.origin;
     }
 
+    public Move reversed() {
+        this.origin.r = 9 - this.origin.r;
+        this.origin.c = 9 - this.origin.c;
+        this.destination.r = 9 - this.destination.r;
+        this.destination.c = 9 - this.destination.c;
+        return this;
+    }
+
     public void setOrigin(BoardCoords origin) {
         this.origin = origin;
     }

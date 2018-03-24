@@ -11,8 +11,10 @@ import javafx.beans.value.ObservableValue;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
+import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import stratego.Stratego;
 import stratego.messages.IStrategoComms;
 import stratego.messages.Message;
 import stratego.pieces.PieceType;
@@ -24,6 +26,7 @@ import stratego.players.LocalPlayer;
 import stratego.players.RemotePlayer;
 
 import java.beans.EventHandler;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,6 +71,7 @@ public class Game implements ChangeListener<Boolean>{
     private RemotePlayer p2;
     private IStrategoComms comms;
     private boolean isp1Turn;
+    private TextArea statusText;
 
     /**
      * PieceType currently "held" by player
@@ -117,8 +121,11 @@ public class Game implements ChangeListener<Boolean>{
                         Platform.runLater(new Runnable() {
                             public void run() {
                                 piecePlacementP2((BoardData) msg.getObj());
+                                if (getState() == AWAIT_P2_MOVE)
+                                    setState(MOVE_NOT_ORIGIN_SELECTED);
                             }
                         });
+                        break;
                     default:
                         break;
                 }
@@ -146,15 +153,16 @@ public class Game implements ChangeListener<Boolean>{
         this.p1 = new LocalPlayer();
         this.p2 = new RemotePlayer(this);
         this.isp1Turn = true;
-        this.state.setValue(SETUP_NOT_PIECE_SELECTED);
         // initialize boardPane with Square objects from this.board
         setupGridPane();
 
     }
 
-    public void start(IStrategoComms comms) {
+    public void start(IStrategoComms comms, TextArea statusText) {
         this.comms = comms;
+        this.statusText = statusText;
 
+        setState(SETUP_NOT_PIECE_SELECTED);
         // notify commsListener when opponent has new message
         IStrategoComms.hasIncoming.addListener(this.commsListener);
 
@@ -178,7 +186,6 @@ public class Game implements ChangeListener<Boolean>{
 
             // remove piece buttons and finished button
             vbox.getChildren().removeAll(pieceButtonBar, finishedButtonVBox);
-
             // send a message to remote player
             BoardData toSend = this.board.toBoardData();
             toSend.reverse();
@@ -187,7 +194,7 @@ public class Game implements ChangeListener<Boolean>{
             comms.sendMessage(finishedMessage);
 
             // initiate game play mode
-            setState(MOVE_NOT_ORIGIN_SELECTED);
+            setState(AWAIT_P2_MOVE);
         });
 
         // initiate setup mode
@@ -219,11 +226,15 @@ public class Game implements ChangeListener<Boolean>{
      * origin click during game
      */
     private void originClick(BoardCoords bc) {
+        System.out.println("origin click: " + bc.toString());
         if (this.board.validOrigin(bc)) {
+            System.out.println("valid origin");
             this.pickedUpPiece = bc;
             this.board.showPossibleMoves(bc);
             setState(MOVE_ORIGIN_SELECTED);
         } else {
+            System.out.println("invalid origin");
+            System.out.println(this.board.toBoardData().toJsonString());
             setState(MOVE_NOT_ORIGIN_SELECTED);
         }
     }
@@ -233,11 +244,11 @@ public class Game implements ChangeListener<Boolean>{
      */
     private void destClick(BoardCoords dest) {
         Move proposed = new Move(this.pickedUpPiece, dest, false, true);
-        if (!this.board.move(proposed, this.isp1Turn)) {
+        if (!this.board.move(proposed, true)) {
             System.out.println("Invalid move.");
             setState(MOVE_NOT_ORIGIN_SELECTED);
         } else {
-            comms.sendMessage(new Message(MOVE, proposed.toJson()));
+            comms.sendMessage(new Message(MOVE, proposed.reversed().toJson()));
             setState(AWAIT_P2_MOVE);
         }
     }
@@ -271,25 +282,33 @@ public class Game implements ChangeListener<Boolean>{
      * Stub for placing p2 pieces during development
      */
     public void piecePlacementP2(BoardData p2Placement) {
-
+        System.out.println("Before getting p2 placement");
+        System.out.println(this.board.toBoardData().toJsonString());
 
         try {
             assert (this.board.getWidth() == 10 && this.board.getHeight() == 10);
         } catch (AssertionError e) {
             System.out.println("Board dimensions should be 10X10 for piecePlacementP2 stub method.");
         }
-        for (int i = 0; i < 40; i++) {
-            int row = i / 10;
-            int col = i % 10;
-            Square sq = this.board.getSquare(row, col);
-            BoardCoords pos = new BoardCoords(row, col);
-            Piece p;
-            if (p2Placement.get(pos).getPt() != null) {
-                p = PIECETYPE_TO_PIECECLASS.get(p2Placement.get(pos).getPt());
-                p.setP1(false);
-                sq.setPiece(p);
+        PlayerPiece pp;
+        for (int i = 0; i < 4; i++)
+            for (int j = 0; j < 10; j++){
+                Square sq = this.board.getSquare(i, j);
+                BoardCoords pos = new BoardCoords(i, j);
+                Piece p;
+                pp = p2Placement.get(pos);
+                if (pp.getPt() != null) {
+                    Class c = PIECETYPE_TO_PIECECLASS.get(pp.getPt());
+                    try {
+                        p = (Piece)c.getDeclaredConstructor().newInstance();
+                        p.setP1(false);
+                        sq.setPiece(p);
+                    } catch (Exception e) {e.printStackTrace();}
+                    System.out.println("playerpiece at " + pos.toString() + ": " + pp.toString());
+                }
             }
-        }
+        System.out.println("After getting p2 placement");
+        System.out.println(this.board.toBoardData().toJsonString());
     }
     /**
      * Setup UI for placing pieces on the board
@@ -339,13 +358,39 @@ public class Game implements ChangeListener<Boolean>{
     }
 
     /**
+     * Sets UI status text
+     */
+    private void setStatusText(String status) {
+        this.statusText.setText(status);
+    }
+
+    /**
      * Sets state.
      *
      * @param state the state
      */
     public void setState(GameState state) {
         System.out.println("new game state: " + state.toString());
-        this.state.setValue(state);
+        switch (state) {
+            case SETUP_NOT_PIECE_SELECTED:
+                setStatusText("Select a piece");
+                break;
+            case SETUP_PIECE_SELECTED:
+                setStatusText("Place piece");
+                break;
+            case MOVE_NOT_ORIGIN_SELECTED:
+                setStatusText("Select a piece");
+                break;
+            case MOVE_ORIGIN_SELECTED:
+                setStatusText("Select destination");
+                break;
+            case AWAIT_P2_MOVE:
+                setStatusText("Waiting for opponent to move");
+                break;
+            default:
+                break;
+        }
+        Game.state.setValue(state);
     }
 
     /**
@@ -363,7 +408,7 @@ public class Game implements ChangeListener<Boolean>{
     public Board getBoard() { return this.board; }
 
     private void p2Move(Move move) {
-        this.board.move(move, isp1Turn);
+        this.board.move(move, false);
         setState(MOVE_NOT_ORIGIN_SELECTED);
     }
 
@@ -384,6 +429,9 @@ public class Game implements ChangeListener<Boolean>{
                 break;
             case MOVE_ORIGIN_SELECTED:
                 destClick(bc);
+                break;
+            case AWAIT_P2_MOVE:
+                System.out.println("Waiting for opponent to move");
                 break;
             default:
                 throw (new IllegalStateException(this.getState().toString() + " is not a valid state."));

@@ -43,7 +43,8 @@ public class BoardData {
         } else {
             this.height = 0;
         }
-        this.state = new ArrayList<>(newBoardState);
+        this.state = new ArrayList<>();
+        this.state.addAll(newBoardState);
     }
 
     public BoardData(String jsonState) {
@@ -106,7 +107,7 @@ public class BoardData {
      */
     public void reverse() {
         for (int i = 0; i < (getHeight() / 2); i++)
-            for (int j = 0; j < (getWidth()/2); j++) {
+            for (int j = 0; j < (getWidth()); j++) {
                 BoardCoords top = new BoardCoords(i, j);
                 BoardCoords bottom = new BoardCoords(getHeight() - i - 1, getWidth()-j - 1);
                 PlayerPiece newTop = get(bottom);

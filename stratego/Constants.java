@@ -92,21 +92,21 @@ public class Constants {
      *
      * @usage Piece piece = PIECETYPE_TO_PIECECLASS.get(MINER);
      */
-    public static final Map<PieceType, Piece> PIECETYPE_TO_PIECECLASS;
+    public static final Map<PieceType, Class> PIECETYPE_TO_PIECECLASS;
     static {
-        Map<PieceType, Piece> pieceClasses = new EnumMap<>(PieceType.class);
-        pieceClasses.put(FLAG, new Flag());
-        pieceClasses.put(BOMB, new Bomb());
-        pieceClasses.put(SPY, new Spy());
-        pieceClasses.put(SCOUT, new Scout());
-        pieceClasses.put(MINER, new Miner());
-        pieceClasses.put(SERGEANT, new Sergeant());
-        pieceClasses.put(LIEUTENANT, new Lieutenant());
-        pieceClasses.put(CAPTAIN, new Captain());
-        pieceClasses.put(MAJOR, new Major());
-        pieceClasses.put(COLONEL, new Colonel());
-        pieceClasses.put(GENERAL, new General());
-        pieceClasses.put(MARSHALL, new Marshall());
+        Map<PieceType, Class> pieceClasses = new EnumMap<>(PieceType.class);
+        pieceClasses.put(FLAG, Flag.class);
+        pieceClasses.put(BOMB, Bomb.class);
+        pieceClasses.put(SPY, Spy.class);
+        pieceClasses.put(SCOUT, Scout.class);
+        pieceClasses.put(MINER, Miner.class);
+        pieceClasses.put(SERGEANT, Sergeant.class);
+        pieceClasses.put(LIEUTENANT, Lieutenant.class);
+        pieceClasses.put(CAPTAIN, Captain.class);
+        pieceClasses.put(MAJOR, Major.class);
+        pieceClasses.put(COLONEL, Colonel.class);
+        pieceClasses.put(GENERAL, General.class);
+        pieceClasses.put(MARSHALL, Marshall.class);
         PIECETYPE_TO_PIECECLASS = Collections.unmodifiableMap(pieceClasses);
     }
 

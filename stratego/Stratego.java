@@ -74,7 +74,7 @@ public class Stratego extends Application {
      * @param newText
      */
     public void changeStatusText(String newText) {
-        this.statusText.setText(newText);
+        statusText.setText(newText);
     }
 
     /**
@@ -131,7 +131,7 @@ public class Stratego extends Application {
         changeStatusText("Setup Connection");
     }
     void initGame() {
-        Stratego.game.start(Stratego.opponent);
+        Stratego.game.start(Stratego.opponent, this.statusText);
     }
 
     @Override
